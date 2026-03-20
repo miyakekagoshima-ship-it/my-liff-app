@@ -11,31 +11,35 @@
         .tea-btn { background-color: #eaffea; }
         .video-btn { background-color: #eaf4ff; }
         
-        /* 完了ボタンのスタイル */
         .finish-btn { background-color: #ffeaea; color: red; font-weight: bold; transition: 0.3s; }
-        /* 押せない状態（disabled）の時のスタイル */
         .finish-btn:disabled { background-color: #e0e0e0; color: #888; cursor: not-allowed; border: 1px solid #ccc; }
         
         #video-container { margin-top: 30px; display: none; }
-        /* APIが生成するiframe用 */
         #youtube-player { width: 100%; height: 250px; border: none; border-radius: 10px; }
+        
+        /* 完了メッセージのスタイル */
+        .completed-msg { color: #008000; font-size: 18px; font-weight: bold; padding: 20px; background-color: #f0fff0; border-radius: 10px; margin: 10px; }
     </style>
 </head>
 <body>
 
     <h2>🍵 お茶の記録</h2>
-    <p>今日飲んだ本数を教えてください</p>
-    <button class="tea-btn" onclick="sendData('tea', 0)">0本</button>
-    <button class="tea-btn" onclick="sendData('tea', 1)">1本</button>
-    <button class="tea-btn" onclick="sendData('tea', 2)">2本</button>
+    <div id="tea-section">
+        <p>今日飲んだ本数を教えてください</p>
+        <button class="tea-btn" onclick="sendData('tea', 0)">0本</button>
+        <button class="tea-btn" onclick="sendData('tea', 1)">1本</button>
+        <button class="tea-btn" onclick="sendData('tea', 2)">2本</button>
+    </div>
 
     <hr>
 
     <h2>🏃‍♂️ 体操動画を見る</h2>
-    <p>難易度を選んでください</p>
-    <button class="video-btn" onclick="showVideo('かんたん', 'QjmdV01-TqI')">かんたん（再生）</button>
-    <button class="video-btn" onclick="showVideo('ふつう', 'hKxXh1GrRjI')">ふつう（再生）</button>
-    <button class="video-btn" onclick="showVideo('むずかしい', 'qP3jtYbfUK0')">むずかしい（再生）</button>
+    <div id="video-section">
+        <p>難易度を選んでください</p>
+        <button class="video-btn" onclick="showVideo('かんたん', 'QjmdV01-TqI')">かんたん（再生）</button>
+        <button class="video-btn" onclick="showVideo('ふつう', 'hKxXh1GrRjI')">ふつう（再生）</button>
+        <button class="video-btn" onclick="showVideo('むずかしい', 'qP3jtYbfUK0')">むずかしい（再生）</button>
+    </div>
 
     <div id="video-container">
         <h3 id="video-title"></h3>
@@ -48,9 +52,30 @@
         const GAS_URL = "https://script.google.com/macros/s/AKfycbxrxgT6OwQa5WNKiOIzY36dWUhskOX6Q6drJvvXiJwJuG_zlHwswpvhg4CIG6Hu-Mnqvw/exec";
         let userId = "";
         let currentLevel = ""; 
-        let player; // YouTubeプレーヤーを格納する変数
+        let player;
 
-        // YouTube IFrame Player API の読み込み
+        // 今日の日付文字列を取得する関数（例: "2026-03-21"）
+        function getTodayString() {
+            const now = new Date();
+            return now.getFullYear() + "-" + (now.getMonth() + 1) + "-" + now.getDate();
+        }
+
+        // 既に今日記録済みかどうかをチェックして画面を切り替える関数
+        function checkDailyLimit() {
+            const today = getTodayString();
+            
+            // お茶の記録チェック
+            if (localStorage.getItem('last_tea_date') === today) {
+                document.getElementById('tea-section').innerHTML = '<div class="completed-msg">✅ 本日のお茶の記録は完了しています</div>';
+            }
+            
+            // 体操の記録チェック
+            if (localStorage.getItem('last_video_date') === today) {
+                document.getElementById('video-section').innerHTML = '<div class="completed-msg">✅ 本日の体操は完了しています</div>';
+                document.getElementById('video-container').style.display = 'none';
+            }
+        }
+
         let tag = document.createElement('script');
         tag.src = "https://www.youtube.com/iframe_api";
         let firstScriptTag = document.getElementsByTagName('script')[0];
@@ -58,6 +83,9 @@
 
         liff.init({ liffId: "2009551698-vafUFmck" }) 
             .then(() => {
+                // LIFFが開かれたら、まず本日の記録状態をチェックする
+                checkDailyLimit();
+
                 if (!liff.isLoggedIn()) {
                     liff.login();
                 } else {
@@ -75,12 +103,21 @@
                 body: JSON.stringify(data)
             }).then(() => {
                 alert("記録しました！お疲れ様でした！");
-                if(type === 'video') {
-                    document.getElementById('video-container').style.display = 'none';
+                
+                // 記録が成功したら、スマホに「今日の日付」を記憶させる
+                const today = getTodayString();
+                if (type === 'tea') {
+                    localStorage.setItem('last_tea_date', today);
+                } else if (type === 'video') {
+                    localStorage.setItem('last_video_date', today);
                     if (player) {
-                        player.stopVideo(); // 記録後に動画を停止する
+                        player.stopVideo(); 
                     }
                 }
+                
+                // 画面を「完了メッセージ」に切り替える
+                checkDailyLimit();
+
             }).catch(err => alert("エラー: " + err));
         }
 
@@ -88,28 +125,25 @@
             currentLevel = level;
             document.getElementById('video-title').innerText = level + "コース";
             
-            // ボタンを押せない状態にリセット
             const finishBtn = document.getElementById('finish-btn');
             finishBtn.disabled = true;
             finishBtn.innerText = "動画を最後まで見ると押せます";
             
             document.getElementById('video-container').style.display = 'block';
             
-            // すでにプレーヤーが作られている場合は動画を切り替えるだけ
             if (player) {
                 player.loadVideoById(videoId);
             } else {
-                // 初めて動画を再生するときにプレーヤーを作成する
                 player = new YT.Player('youtube-player', {
                     height: '250',
                     width: '100%',
                     videoId: videoId,
                     playerVars: {
-                        'playsinline': 1, // スマホで全画面にならずインライン再生
-                        'rel': 0          // 関連動画を同じチャンネルに限定
+                        'playsinline': 1,
+                        'rel': 0
                     },
                     events: {
-                        'onStateChange': onPlayerStateChange // 状態が変わった時に呼ぶ関数を指定
+                        'onStateChange': onPlayerStateChange
                     }
                 });
             }
@@ -117,12 +151,10 @@
             window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
         }
 
-        // 動画の再生状態が変わった時に自動で呼ばれる関数
         function onPlayerStateChange(event) {
-            // YT.PlayerState.ENDED (0) は動画が最後まで再生された状態
             if (event.data === YT.PlayerState.ENDED) {
                 const finishBtn = document.getElementById('finish-btn');
-                finishBtn.disabled = false; // ボタンを押せるようにする
+                finishBtn.disabled = false;
                 finishBtn.innerText = "体操おわった！（記録する）";
             }
         }
