@@ -27,11 +27,11 @@
     <button class="video-btn" onclick="watchVideo('むずかしい', 'https://www.youtube.com/watch?v=動画ID3')">むずかしい（視聴）</button>
 
     <script>
-        const GAS_URL = "あなたのウェブアプリURL"; // ここに先ほどのURLを貼り付け
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycbxrxgT6OwQa5WNKiOIzY36dWUhskOX6Q6drJvvXiJwJuG_zlHwswpvhg4CIG6Hu-Mnqvw/exec'; // ここに先ほどのURLを貼り付け
         let userId = "";
 
         // LIFFの初期化
-        liff.init({ liffId: "あなたのLIFF ID" }) // LINE Developersで発行したID
+        liff.init({ liffId: '2009551698-vafUFmck' }) // LINE Developersで発行したID
             .then(() => {
                 if (!liff.isLoggedIn()) {
                     liff.login();
