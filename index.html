@@ -10,60 +10,89 @@
         button { width: 80%; padding: 15px; margin: 10px; font-size: 18px; cursor: pointer; border-radius: 10px; border: 1px solid #ccc; }
         .tea-btn { background-color: #eaffea; }
         .video-btn { background-color: #eaf4ff; }
+        .finish-btn { background-color: #ffeaea; color: red; font-weight: bold; }
+        
+        /* 最初は動画エリアを隠しておく */
+        #video-container { margin-top: 30px; display: none; }
+        /* YouTubeを埋め込む枠のサイズ */
+        iframe { width: 100%; height: 250px; border: none; border-radius: 10px; }
     </style>
 </head>
 <body>
 
-    <h2>お茶を何本飲みましたか？</h2>
+    <h2>🍵 お茶の記録</h2>
+    <p>今日飲んだ本数を教えてください</p>
     <button class="tea-btn" onclick="sendData('tea', 0)">0本</button>
     <button class="tea-btn" onclick="sendData('tea', 1)">1本</button>
     <button class="tea-btn" onclick="sendData('tea', 2)">2本</button>
 
     <hr>
 
-    <h2>体操動画を見る</h2>
-    <button class="video-btn" onclick="watchVideo('かんたん', 'https://www.youtube.com/watch?v=qP3jtYbfUK0&t=14s')">かんたん（視聴）</button>
-    <button class="video-btn" onclick="watchVideo('ふつう', 'https://www.youtube.com/watch?v=hKxXh1GrRjI')">ふつう（視聴）</button>
-    <button class="video-btn" onclick="watchVideo('むずかしい', 'https://www.youtube.com/watch?v=QjmdV01-TqI')">むずかしい（視聴）</button>
+    <h2>🏃‍♂️ 体操動画を見る</h2>
+    <p>難易度を選んでください</p>
+    <button class="video-btn" onclick="showVideo('かんたん', 'QjmdV01-TqI')">かんたん（再生）</button>
+    <button class="video-btn" onclick="showVideo('ふつう', 'hKxXh1GrRjI')">ふつう（再生）</button>
+    <button class="video-btn" onclick="showVideo('むずかしい', 'qP3jtYbfUK0&t=14s')">むずかしい（再生）</button>
+
+    <div id="video-container">
+        <h3 id="video-title"></h3>
+        <iframe id="youtube-player" src="" allowfullscreen></iframe>
+        <br>
+        <button id="finish-btn" class="finish-btn" onclick="finishVideo()">体操おわった！（記録する）</button>
+    </div>
 
     <script>
-        const GAS_URL = 'https://script.google.com/macros/s/AKfycbxrxgT6OwQa5WNKiOIzY36dWUhskOX6Q6drJvvXiJwJuG_zlHwswpvhg4CIG6Hu-Mnqvw/exec'; // ここに先ほどのURLを貼り付け
+        // 設定済みのURLとID
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbxrxgT6OwQa5WNKiOIzY36dWUhskOX6Q6drJvvXiJwJuG_zlHwswpvhg4CIG6Hu-Mnqvw/exec";
         let userId = "";
+        let currentLevel = ""; // 今選んでいる難易度を記憶する変数
 
-        // LIFFの初期化
-        liff.init({ liffId: '2009551698-vafUFmck' }) // LINE Developersで発行したID
+        liff.init({ liffId: "2009551698-vafUFmck" }) 
             .then(() => {
                 if (!liff.isLoggedIn()) {
                     liff.login();
                 } else {
-                    const profile = liff.getDecodedIDToken();
-                    userId = profile.sub; // LINEのユーザーIDを取得
+                    userId = liff.getDecodedIDToken().sub;
                 }
             });
 
         // GASにデータを送る関数
         function sendData(type, value) {
-            const data = {
-                userId: userId,
-                type: type,
-                value: value
-            };
-
-            // GASのdoPostへデータを送信
+            const data = { userId: userId, type: type, value: value };
+            
             fetch(GAS_URL, {
                 method: "POST",
-                mode: "no-cors", // GASへのPOSTでよく使われる設定
+                mode: "no-cors",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(data)
             }).then(() => {
-                alert("記録しました！");
+                alert("記録しました！お疲れ様でした！");
+                // 記録が終わったら動画エリアを閉じる
+                if(type === 'video') {
+                    document.getElementById('video-container').style.display = 'none';
+                    document.getElementById('youtube-player').src = "";
+                }
             }).catch(err => alert("エラー: " + err));
         }
 
-        // 動画視聴のログを記録してYouTubeを開く
-        function watchVideo(level, url) {
-            sendData('video', level); // ログを送信
-            window.location.href = url; // YouTubeへ移動
+        // 選んだ難易度の動画を表示する関数
+        function showVideo(level, videoId) {
+            currentLevel = level;
+            document.getElementById('video-title').innerText = level + "コース";
+            
+            // YouTubeの埋め込み用URL（/embed/）を作成してiframeにセット
+            document.getElementById('youtube-player').src = "https://www.youtube.com/embed/" + videoId + "?playsinline=1";
+            
+            // 隠していた動画エリアを表示する
+            document.getElementById('video-container').style.display = 'block';
+            
+            // 画面を少し下へスクロールして動画を見やすくする
+            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+        }
+
+        // 体操が終わったボタンを押したときの処理
+        function finishVideo() {
+            sendData('video', currentLevel); // 視聴ログをGASへ送信
         }
     </script>
 </body>
