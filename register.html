@@ -16,8 +16,10 @@
         .checkbox-group input { margin-top: 4px; margin-right: 10px; transform: scale(1.3); }
         .submit-btn { width: 100%; padding: 15px; background-color: #00B900; color: white; border: none; border-radius: 10px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 20px; }
         .submit-btn:disabled { background-color: #ccc; cursor: not-allowed; }
+        
         #completed-msg { display: none; text-align: center; color: #008000; font-size: 18px; font-weight: bold; padding: 30px 20px; background-color: #f0fff0; border-radius: 10px; border: 1px solid #008000; margin-top: 20px; }
         #form-wrapper { background-color: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .close-btn { width: 100%; padding: 15px; background-color: #666; color: white; border: none; border-radius: 10px; font-size: 16px; cursor: pointer; margin-top: 20px; }
     </style>
 </head>
 <body>
@@ -58,21 +60,17 @@
 
     <div id="completed-msg">
         ✅ 登録が完了しました。<br>ご協力ありがとうございます。
+        <br>
+        <button class="close-btn" onclick="liff.closeWindow()">画面を閉じる</button>
     </div>
 
     <script>
         const GAS_URL = "https://script.google.com/macros/s/AKfycbxrxgT6OwQa5WNKiOIzY36dWUhskOX6Q6drJvvXiJwJuG_zlHwswpvhg4CIG6Hu-Mnqvw/exec";
         let userId = "";
 
-        // ★注意: ここには「登録フォーム用」の新しいLIFF IDを入れます
-        liff.init({ liffId: '2009551698-7d1vy9Ej' }) 
+        // 設定していただいた登録フォーム用のLIFF ID
+        liff.init({ liffId: "2009551698-7d1vy9Ej" }) 
             .then(() => {
-                // 既に登録済みかチェック（一度登録したらフォームを隠す機能）
-                if (localStorage.getItem('is_registered') === 'true') {
-                    document.getElementById('form-wrapper').style.display = 'none';
-                    document.getElementById('completed-msg').style.display = 'block';
-                }
-
                 if (!liff.isLoggedIn()) {
                     liff.login();
                 } else {
@@ -80,15 +78,13 @@
                 }
             });
 
-        // フォームが送信（「登録する」ボタンが押された）時の処理
         document.getElementById('registerForm').addEventListener('submit', function(event) {
-            event.preventDefault(); // 画面がリロードされるのを防ぐ
+            event.preventDefault(); 
 
             const submitBtn = document.getElementById('submitBtn');
             submitBtn.disabled = true;
             submitBtn.innerText = "送信中...";
 
-            // フォームの入力内容をまとめる
             const formData = {
                 name: document.getElementById('nameKanji').value,
                 kana: document.getElementById('nameKana').value,
@@ -98,17 +94,13 @@
 
             const data = { userId: userId, type: 'register', value: formData };
 
-            // GASへデータ送信
             fetch(GAS_URL, {
                 method: "POST",
                 mode: "no-cors",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(data)
             }).then(() => {
-                // 送信成功したらスマホに「登録済み」を記憶させる
-                localStorage.setItem('is_registered', 'true');
-                
-                // 画面を切り替える
+                // 通信が完了したら入力フォームを隠して完了メッセージを出す
                 document.getElementById('form-wrapper').style.display = 'none';
                 document.getElementById('completed-msg').style.display = 'block';
             }).catch(err => {
