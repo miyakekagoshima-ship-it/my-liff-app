@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>過去のお茶の記録</title>
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <style>
+        body { font-family: sans-serif; padding: 20px; background-color: #f9f9f9; color: #333; }
+        h2 { text-align: center; font-size: 20px; color: #2c3e50; }
+        .form-group { margin-bottom: 20px; text-align: left; background-color: #fff; padding: 15px; border-radius: 10px; border: 1px solid #ddd; }
+        label { display: block; font-weight: bold; margin-bottom: 10px; font-size: 16px; }
+        .required { color: red; font-size: 12px; margin-left: 5px; }
+        input[type="date"] { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 16px; }
+        
+        /* ラジオボタンを押しやすいデザインにするスタイル */
+        .radio-group { display: flex; gap: 10px; }
+        .radio-label { flex: 1; text-align: center; background-color: #f0f0f0; padding: 12px 0; border-radius: 5px; border: 1px solid #ccc; cursor: pointer; font-size: 16px; font-weight: bold; transition: 0.2s; }
+        .radio-group input[type="radio"] { display: none; }
+        .radio-group input[type="radio"]:checked + .radio-label { background-color: #eaffea; border-color: #00B900; color: #00B900; }
+        
+        .submit-btn { width: 100%; padding: 15px; background-color: #00B900; color: white; border: none; border-radius: 10px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        .submit-btn:disabled { background-color: #ccc; cursor: not-allowed; }
+        
+        #completed-msg { display: none; text-align: center; color: #008000; font-size: 18px; font-weight: bold; padding: 30px 20px; background-color: #f0fff0; border-radius: 10px; border: 1px solid #008000; margin-top: 20px; }
+        .close-btn { width: 100%; padding: 15px; background-color: #666; color: white; border: none; border-radius: 10px; font-size: 16px; cursor: pointer; margin-top: 20px; }
+    </style>
+</head>
+<body>
+
+    <h2>🍵 過去のお茶の記録<br>（修正・追加）</h2>
+
+    <div id="form-wrapper">
+        <form id="historyForm">
+            <div class="form-group">
+                <label>対象の日付<span class="required">※必須</span></label>
+                <input type="date" id="targetDate" required>
+            </div>
+
+            <div class="form-group">
+                <label>目的<span class="required">※必須</span></label>
+                <div class="radio-group">
+                    <input type="radio" id="actionAdd" name="actionType" value="追加" required>
+                    <label for="actionAdd" class="radio-label">入力忘れ(追加)</label>
+                    <input type="radio" id="actionEdit" name="actionType" value="修正" required>
+                    <label for="actionEdit" class="radio-label">間違いの修正</label>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>飲んだ本数<span class="required">※必須</span></label>
+                <div class="radio-group">
+                    <input type="radio" id="tea0" name="teaCount" value="0" required>
+                    <label for="tea0" class="radio-label">0本</label>
+                    <input type="radio" id="tea1" name="teaCount" value="1" required>
+                    <label for="tea1" class="radio-label">1本</label>
+                    <input type="radio" id="tea2" name="teaCount" value="2" required>
+                    <label for="tea2" class="radio-label">2本</label>
+                </div>
+            </div>
+
+            <button type="submit" id="submitBtn" class="submit-btn">送信する</button>
+        </form>
+    </div>
+
+    <div id="completed-msg">
+        ✅ 記録を送信しました。
+        <br>
+        <button class="close-btn" onclick="liff.closeWindow()">画面を閉じる</button>
+    </div>
+
+    <script>
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbxrxgT6OwQa5WNKiOIzY36dWUhskOX6Q6drJvvXiJwJuG_zlHwswpvhg4CIG6Hu-Mnqvw/exec";
+        let userId = "";
+
+        // ★注意: ここには「過去記録用」の新しいLIFF IDを入れる必要があります
+        liff.init({ liffId: '2009551698-LY0Oiuuv' }) 
+            .then(() => {
+                if (!liff.isLoggedIn()) {
+                    liff.login();
+                } else {
+                    userId = liff.getDecodedIDToken().sub;
+                }
+            });
+
+        document.getElementById('historyForm').addEventListener('submit', function(event) {
+            event.preventDefault(); 
+
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.innerText = "送信中...";
+
+            // 選択されたボタンの値を取得
+            const actionType = document.querySelector('input[name="actionType"]:checked').value;
+            const teaCount = document.querySelector('input[name="teaCount"]:checked').value;
+
+            const formData = {
+                date: document.getElementById('targetDate').value,
+                action: actionType,
+                count: teaCount
+            };
+
+            const data = { userId: userId, type: 'tea_history', value: formData };
+
+            fetch(GAS_URL, {
+                method: "POST",
+                mode: "no-cors",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(data)
+            }).then(() => {
+                document.getElementById('form-wrapper').style.display = 'none';
+                document.getElementById('completed-msg').style.display = 'block';
+            }).catch(err => {
+                alert("エラーが発生しました: " + err);
+                submitBtn.disabled = false;
+                submitBtn.innerText = "送信する";
+            });
+        });
+    </script>
+</body>
+</html>
