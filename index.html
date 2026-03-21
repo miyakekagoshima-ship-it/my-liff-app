@@ -3,21 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>お茶と体操の記録</title>
+    <title>お茶の記録</title>
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <style>
         body { font-family: sans-serif; text-align: center; padding: 20px; }
         button { width: 80%; padding: 15px; margin: 10px; font-size: 18px; cursor: pointer; border-radius: 10px; border: 1px solid #ccc; }
         .tea-btn { background-color: #eaffea; }
-        .video-btn { background-color: #eaf4ff; }
-        
-        .finish-btn { background-color: #ffeaea; color: red; font-weight: bold; transition: 0.3s; }
-        .finish-btn:disabled { background-color: #e0e0e0; color: #888; cursor: not-allowed; border: 1px solid #ccc; }
-        
-        #video-container { margin-top: 30px; display: none; }
-        #youtube-player { width: 100%; height: 250px; border: none; border-radius: 10px; }
-        
-        /* 完了メッセージのスタイルを少し目立たせました */
         .completed-msg { color: #008000; font-size: 18px; font-weight: bold; padding: 20px; background-color: #f0fff0; border-radius: 10px; margin: 10px; border: 1px solid #008000; }
     </style>
 </head>
@@ -26,66 +17,32 @@
     <h2>🍵 お茶の記録</h2>
     <div id="tea-section">
         <p>今日飲んだ本数を教えてください</p>
-        <button class="tea-btn" onclick="sendData('tea', 0)">0本</button>
-        <button class="tea-btn" onclick="sendData('tea', 1)">1本</button>
-        <button class="tea-btn" onclick="sendData('tea', 2)">2本</button>
-    </div>
-
-    <hr>
-
-    <h2>🏃‍♂️ 体操動画を見る</h2>
-    <div id="video-section">
-        <p>難易度を選んでください</p>
-        <button class="video-btn" onclick="showVideo('かんたん', 'QjmdV01-TqI')">かんたん（再生）</button>
-        <button class="video-btn" onclick="showVideo('ふつう', 'hKxXh1GrRjI')">ふつう（再生）</button>
-        <button class="video-btn" onclick="showVideo('むずかしい', 'qP3jtYbfUK0')">むずかしい（再生）</button>
-    </div>
-
-    <div id="video-container">
-        <h3 id="video-title"></h3>
-        <div id="youtube-player"></div>
-        <br>
-        <button id="finish-btn" class="finish-btn" onclick="finishVideo()" disabled>動画を最後まで見ると押せます</button>
+        <button class="tea-btn" onclick="sendData(0)">0本</button>
+        <button class="tea-btn" onclick="sendData(1)">1本</button>
+        <button class="tea-btn" onclick="sendData(2)">2本</button>
     </div>
 
     <script>
         const GAS_URL = "https://script.google.com/macros/s/AKfycbxrxgT6OwQa5WNKiOIzY36dWUhskOX6Q6drJvvXiJwJuG_zlHwswpvhg4CIG6Hu-Mnqvw/exec";
         let userId = "";
-        let currentLevel = ""; 
-        let player;
 
         function getTodayString() {
             const now = new Date();
             return now.getFullYear() + "-" + (now.getMonth() + 1) + "-" + now.getDate();
         }
 
-        // 記録済みかチェックし、画面を切り替える処理
         function checkDailyLimit() {
-            const today = getTodayString();
-            const teaSection = document.getElementById('tea-section');
-            const videoSection = document.getElementById('video-section');
-            
-            if (localStorage.getItem('last_tea_date') === today && teaSection) {
-                teaSection.innerHTML = '<div class="completed-msg">✅ 本日のお茶の記録は完了しています</div>';
-            }
-            
-            if (localStorage.getItem('last_video_date') === today && videoSection) {
-                videoSection.innerHTML = '<div class="completed-msg">✅ 本日の体操は完了しています</div>';
-                document.getElementById('video-container').style.display = 'none';
+            if (localStorage.getItem('last_tea_date') === getTodayString()) {
+                document.getElementById('tea-section').innerHTML = '<div class="completed-msg">✅ 本日のお茶の記録は完了しています</div>';
             }
         }
 
-        // ページが開かれた瞬間に即座にチェックする（追加）
         document.addEventListener("DOMContentLoaded", checkDailyLimit);
 
-        let tag = document.createElement('script');
-        tag.src = "https://www.youtube.com/iframe_api";
-        let firstScriptTag = document.getElementsByTagName('script')[0];
-        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-
+        // ※お茶用のLIFF IDはそのまま使います
         liff.init({ liffId: "2009551698-vafUFmck" }) 
             .then(() => {
-                checkDailyLimit(); // 念のためLIFF読み込み後にもう一度チェック
+                checkDailyLimit();
                 if (!liff.isLoggedIn()) {
                     liff.login();
                 } else {
@@ -93,23 +50,11 @@
                 }
             });
 
-        function sendData(type, value) {
-            // 【重要】ボタンが押された瞬間に、スマホに記憶させて画面を「完了」にする
-            const today = getTodayString();
-            if (type === 'tea') {
-                localStorage.setItem('last_tea_date', today);
-            } else if (type === 'video') {
-                localStorage.setItem('last_video_date', today);
-                if (player && typeof player.stopVideo === 'function') {
-                    player.stopVideo(); 
-                }
-            }
-            
-            // 通信を待たずに即座にボタンを消す（連打・重複防止）
+        function sendData(value) {
+            localStorage.setItem('last_tea_date', getTodayString());
             checkDailyLimit();
 
-            // その後、裏側でGASへデータを送信する
-            const data = { userId: userId, type: type, value: value };
+            const data = { userId: userId, type: 'tea', value: value };
             fetch(GAS_URL, {
                 method: "POST",
                 mode: "no-cors",
@@ -118,47 +63,6 @@
             }).then(() => {
                 alert("記録しました！お疲れ様でした！");
             }).catch(err => alert("エラー: " + err));
-        }
-
-        function showVideo(level, videoId) {
-            currentLevel = level;
-            document.getElementById('video-title').innerText = level + "コース";
-            
-            const finishBtn = document.getElementById('finish-btn');
-            finishBtn.disabled = true;
-            finishBtn.innerText = "動画を最後まで見ると押せます";
-            
-            document.getElementById('video-container').style.display = 'block';
-            
-            if (player) {
-                player.loadVideoById(videoId);
-            } else {
-                player = new YT.Player('youtube-player', {
-                    height: '250',
-                    width: '100%',
-                    videoId: videoId,
-                    playerVars: {
-                        'playsinline': 1,
-                        'rel': 0
-                    },
-                    events: {
-                        'onStateChange': onPlayerStateChange
-                    }
-                });
-            }
-            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-        }
-
-        function onPlayerStateChange(event) {
-            if (event.data === YT.PlayerState.ENDED) {
-                const finishBtn = document.getElementById('finish-btn');
-                finishBtn.disabled = false;
-                finishBtn.innerText = "体操おわった！（記録する）";
-            }
-        }
-
-        function finishVideo() {
-            sendData('video', currentLevel); 
         }
     </script>
 </body>
