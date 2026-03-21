@@ -38,6 +38,10 @@
         let userId = "";
         let currentLevel = ""; 
         let player;
+        
+        // ★追加：スキップ防止用の変数
+        let timeTracker; 
+        let maxTime = 0; // どこまで再生したかを記憶する
 
         function getTodayString() {
             const now = new Date();
@@ -58,7 +62,6 @@
         let firstScriptTag = document.getElementsByTagName('script')[0];
         firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
-        // ★注意: ここには新しいLIFF IDを入れる必要があります（ステップ3で取得します）
         liff.init({ liffId: '2009551698-KgukTtVZ' }) 
             .then(() => {
                 checkDailyLimit();
@@ -96,6 +99,10 @@
             finishBtn.innerText = "動画を最後まで見ると押せます";
             document.getElementById('video-container').style.display = 'block';
             
+            // ★追加：動画を切り替えたら記憶をリセット
+            maxTime = 0;
+            if (timeTracker) clearInterval(timeTracker);
+
             if (player) {
                 player.loadVideoById(videoId);
             } else {
@@ -103,7 +110,11 @@
                     height: '250',
                     width: '100%',
                     videoId: videoId,
-                    playerVars: { 'playsinline': 1, 'rel': 0 },
+                    playerVars: { 
+                        'playsinline': 1, 
+                        'rel': 0,
+                        'disablekb': 1 // キーボード操作でのスキップもブロック
+                    },
                     events: { 'onStateChange': onPlayerStateChange }
                 });
             }
@@ -111,10 +122,42 @@
         }
 
         function onPlayerStateChange(event) {
+            // ★追加：再生中のスキップ監視
+            if (event.data === YT.PlayerState.PLAYING) {
+                // 1秒ごとに現在位置をチェック
+                timeTracker = setInterval(function() {
+                    let currentTime = player.getCurrentTime();
+                    
+                    // 既に見た最大時間より2秒以上先へ進めようとした場合
+                    if (currentTime > maxTime + 2) {
+                        player.seekTo(maxTime); // 見ていた場所まで強制的に引き戻す
+                    } else {
+                        // 正常に見ていれば、最大視聴時間を更新
+                        if (currentTime > maxTime) {
+                            maxTime = currentTime;
+                        }
+                    }
+                }, 1000);
+            } else {
+                // 一時停止や終了時は監視タイマーをストップ
+                clearInterval(timeTracker);
+            }
+
+            // 動画が最後まで到達したときの処理
             if (event.data === YT.PlayerState.ENDED) {
-                const finishBtn = document.getElementById('finish-btn');
-                finishBtn.disabled = false;
-                finishBtn.innerText = "体操おわった！（記録する）";
+                let duration = player.getDuration();
+                
+                // ★追加：動画の長さいっぱい（95%以上）まで本当に見たか最終チェック
+                if (maxTime >= duration * 0.95) {
+                    const finishBtn = document.getElementById('finish-btn');
+                    finishBtn.disabled = false;
+                    finishBtn.innerText = "体操おわった！（記録する）";
+                } else {
+                    // もし一瞬の隙を突いて最後までスキップされた場合は、元に戻して警告
+                    player.seekTo(maxTime);
+                    player.playVideo();
+                    alert("動画は飛ばさずに最後までご視聴ください🙇‍♂️");
+                }
             }
         }
 
