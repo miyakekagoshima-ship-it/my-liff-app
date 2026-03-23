@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>よかチャレⅡ 初回健康チェック登録</title>
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <style>
+        body { font-family: sans-serif; padding: 20px; background-color: #f9f9f9; color: #333; }
+        h2 { text-align: center; font-size: 20px; color: #2c3e50; }
+        .form-group { margin-bottom: 20px; text-align: left; background-color: #fff; padding: 15px; border-radius: 10px; border: 1px solid #ddd; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 14px; }
+        .required { color: red; font-size: 12px; margin-left: 5px; }
+        input[type="text"], input[type="date"] { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 16px; }
+        .checkbox-group { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
+        .checkbox-label { display: flex; align-items: center; font-size: 16px; font-weight: normal; cursor: pointer; }
+        .checkbox-label input { margin-right: 10px; transform: scale(1.5); }
+        .submit-btn { width: 100%; padding: 15px; background-color: #00B900; color: white; border: none; border-radius: 10px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 20px; }
+        .submit-btn:disabled { background-color: #ccc; cursor: not-allowed; }
+        #completed-msg { display: none; text-align: center; color: #008000; font-size: 18px; font-weight: bold; padding: 30px 20px; background-color: #f0fff0; border-radius: 10px; border: 1px solid #008000; margin-top: 20px; }
+        .close-btn { width: 100%; padding: 15px; background-color: #666; color: white; border: none; border-radius: 10px; font-size: 16px; cursor: pointer; margin-top: 20px; }
+    </style>
+</head>
+<body>
+
+    <h2>お茶と健康の研究<br>初回健康チェック登録</h2>
+
+    <div id="form-wrapper">
+        <form id="registerForm">
+            <div class="form-group">
+                <label>お名前（漢字）<span class="required">※必須</span></label>
+                <input type="text" id="nameKanji" placeholder="例：山田 太郎" required>
+            </div>
+
+            <div class="form-group">
+                <label>生年月日<span class="required">※必須</span></label>
+                <input type="date" id="dob" required>
+            </div>
+
+            <div class="form-group">
+                <label>8月2日(日) 測定会へ参加可能な時間<br>（所要時間:1時間程度）<span class="required">※必須</span></label>
+                <p style="font-size: 12px; color: #666; margin: 0 0 10px 0;">【複数選択可】当てはまるものをすべて選択してください。</p>
+                <div class="checkbox-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="preferredTime" value="午前の部(9時～12時)"> 午前の部 (9時～12時)
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="preferredTime" value="午後の部(13時～15時)"> 午後の部 (13時～15時)
+                    </label>
+                </div>
+            </div>
+
+            <button type="submit" id="submitBtn" class="submit-btn">登録してメニューを開く</button>
+        </form>
+    </div>
+
+    <div id="completed-msg">
+        ✅ 登録が完了しました。<br>ご協力ありがとうございます。
+        <br>
+        <button class="close-btn" onclick="liff.closeWindow()">画面を閉じる</button>
+    </div>
+
+    <script>
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbxrxgT6OwQa5WNKiOIzY36dWUhskOX6Q6drJvvXiJwJuG_zlHwswpvhg4CIG6Hu-Mnqvw/exec"; 
+        let userId = "";
+
+        // ★注意：このフォーム用のLIFF IDを入れてください
+        liff.init({ liffId: "ここにLIFF_IDを入れます" }) 
+            .then(() => {
+                if (!liff.isLoggedIn()) {
+                    liff.login();
+                } else {
+                    userId = liff.getDecodedIDToken().sub;
+                }
+            });
+
+        document.getElementById('registerForm').addEventListener('submit', function(event) {
+            event.preventDefault(); 
+
+            const checkboxes = document.querySelectorAll('input[name="preferredTime"]:checked');
+            if (checkboxes.length === 0) {
+                alert("参加可能な時間を1つ以上選択してください。");
+                return;
+            }
+
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.innerText = "送信中...";
+
+            let selectedTimes = [];
+            checkboxes.forEach((cb) => { selectedTimes.push(cb.value); });
+            const timeString = selectedTimes.join("、");
+            
+            const name = document.getElementById('nameKanji').value;
+            const dob = document.getElementById('dob').value;
+
+            const formData = {
+                name: name,
+                dob: dob,
+                time: timeString
+            };
+
+            // ★typeを 'first_check' に変更して送信（以前の登録フォームと区別します）
+            const data = { userId: userId, type: 'first_check', value: formData };
+
+            fetch(GAS_URL, {
+                method: "POST",
+                mode: "no-cors",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(data)
+            }).then(() => {
+                
+                // チャット画面への自動送信メッセージ
+                if (liff.isInClient()) {
+                    liff.sendMessages([{
+                        'type': 'text',
+                        'text': '【参加登録完了】\n氏名：' + name + '\n希望：' + timeString
+                    }]).then(() => {
+                        document.getElementById('form-wrapper').style.display = 'none';
+                        document.getElementById('completed-msg').style.display = 'block';
+                    }).catch((err) => {
+                        console.log('メッセージ送信エラー', err);
+                        document.getElementById('form-wrapper').style.display = 'none';
+                        document.getElementById('completed-msg').style.display = 'block';
+                    });
+                } else {
+                    document.getElementById('form-wrapper').style.display = 'none';
+                    document.getElementById('completed-msg').style.display = 'block';
+                }
+                
+            }).catch(err => {
+                alert("エラーが発生しました: " + err);
+                submitBtn.disabled = false;
+                submitBtn.innerText = "登録してメニューを開く";
+            });
+        });
+    </script>
+</body>
+</html>
