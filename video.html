@@ -54,8 +54,8 @@
             }
         }
 
-        // ▼【テスト用】画面が開いた時の制限を無効化
-        // document.addEventListener("DOMContentLoaded", checkDailyLimit);
+        // ▼【復活】画面が開いた時のチェック
+        document.addEventListener("DOMContentLoaded", checkDailyLimit);
 
         let tag = document.createElement('script');
         tag.src = "https://www.youtube.com/iframe_api";
@@ -64,8 +64,8 @@
 
         liff.init({ liffId: '2009559911-sodIAoeR' }) 
             .then(() => {
-                // ▼【テスト用】LIFF読み込み後の制限を無効化
-                // checkDailyLimit();
+                // ▼【復活】LIFF読み込み後のチェック
+                checkDailyLimit();
                 
                 if (!liff.isLoggedIn()) {
                     liff.login();
@@ -75,15 +75,15 @@
             });
 
         function sendData(level) {
-            // ▼【テスト用】送信した瞬間の制限を無効化
-            // localStorage.setItem('last_video_date', getTodayString());
+            // ▼【復活】送信した瞬間に「今日の日付」を記憶させて画面を切り替える
+            localStorage.setItem('last_video_date', getTodayString());
             
             if (player && typeof player.stopVideo === 'function') {
                 player.stopVideo(); 
             }
             
-            // ▼【テスト用】制限チェックを無効化
-            // checkDailyLimit();
+            // ▼【復活】制限のチェックを発動
+            checkDailyLimit();
 
             const data = { userId: userId, type: 'video', value: level };
             fetch(GAS_URL, {
@@ -92,7 +92,6 @@
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(data)
             }).then(() => {
-                // ▼▼▼ 日付と難易度（コース）入りのメッセージに変更 ▼▼▼
                 let msgText = '🏃‍♂️ 【体操の記録】\n本日（' + getTodayString() + '）：体操を実施しました！\n（コース：' + level + '）';
 
                 if (liff.isInClient()) {
