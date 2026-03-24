@@ -61,6 +61,22 @@
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(data)
             }).then(() => {
+                // ▼▼▼ ここから追加・変更 ▼▼▼
+                // ※ value の部分は、取得したお茶の杯数の変数名を入れてください
+                let msgText = '🍵 【お茶の記録】\n本日：' + value + '杯 飲みました！';
+
+                if (liff.isInClient()) {
+                    liff.sendMessages([{ 'type': 'text', 'text': msgText }]).then(() => {
+                        document.getElementById('form-wrapper').style.display = 'none';
+                        document.getElementById('completed-msg').style.display = 'block';
+                    }).catch((err) => {
+                        document.getElementById('form-wrapper').style.display = 'none';
+                        document.getElementById('completed-msg').style.display = 'block';
+                    });
+                } else {
+                    document.getElementById('form-wrapper').style.display = 'none';
+                    document.getElementById('completed-msg').style.display = 'block';
+                }
                 alert("記録しました！お疲れ様でした！");
             }).catch(err => alert("エラー: " + err));
         }
