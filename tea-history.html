@@ -108,14 +108,17 @@
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(data)
             }).then(() => {
-                // ▼▼▼ ここから追加・変更 ▼▼▼
-                let msgText = '📝 【過去の記録（修正）】\n日付：' + date + '\n記録：' + count + '杯';
+                
+                // ▼▼▼ 修正したコード ▼▼▼
+                // formData.date、formData.action、formData.count を使って文字を作ります
+                let msgText = '📝 【過去の記録（' + formData.action + '）】\n日付：' + formData.date + '\n記録：' + formData.count + '杯';
 
                 if (liff.isInClient()) {
                     liff.sendMessages([{ 'type': 'text', 'text': msgText }]).then(() => {
                         document.getElementById('form-wrapper').style.display = 'none';
                         document.getElementById('completed-msg').style.display = 'block';
                     }).catch((err) => {
+                        console.log(err);
                         document.getElementById('form-wrapper').style.display = 'none';
                         document.getElementById('completed-msg').style.display = 'block';
                     });
@@ -124,8 +127,7 @@
                     document.getElementById('completed-msg').style.display = 'block';
                 }
                 // ▲▲▲ ここまで ▲▲▲
-                document.getElementById('form-wrapper').style.display = 'none';
-                document.getElementById('completed-msg').style.display = 'block';
+                
             }).catch(err => {
                 alert("エラーが発生しました: " + err);
                 submitBtn.disabled = false;
