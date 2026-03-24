@@ -22,7 +22,7 @@
         <button class="tea-btn" onclick="sendData(2)">2本</button>
     </div>
 
-    <script>
+<script>
         const GAS_URL = "https://script.google.com/macros/s/AKfycbxrxgT6OwQa5WNKiOIzY36dWUhskOX6Q6drJvvXiJwJuG_zlHwswpvhg4CIG6Hu-Mnqvw/exec";
         let userId = "";
 
@@ -37,14 +37,14 @@
             }
         }
 
-       // ▼ 1箇所目：画面が開いた時のチェックを無効化
-        // document.addEventListener("DOMContentLoaded", checkDailyLimit);
+        // ▼【復活】画面が開いた時のチェック
+        document.addEventListener("DOMContentLoaded", checkDailyLimit);
 
-        // ※お茶用のLIFF IDはそのまま使います
+        // ※お茶用のLIFF ID
         liff.init({ liffId: "2009559911-f5a6WxHg" }) 
             .then(() => {
-                // ▼ 2箇所目：LIFF読み込み後のチェックを無効化
-                // checkDailyLimit();
+                // ▼【復活】LIFF読み込み後のチェック
+                checkDailyLimit();
                 
                 if (!liff.isLoggedIn()) {
                     liff.login();
@@ -54,35 +54,36 @@
             });
 
         function sendData(value) {
-// ▼ この2行の先頭に // をつけて無効化します
-            // localStorage.setItem('last_tea_date', getTodayString());
-            // checkDailyLimit();
+            // ▼【復活】送信した瞬間に「今日の日付」を記憶させて画面を切り替える
+            localStorage.setItem('last_tea_date', getTodayString());
+            checkDailyLimit();
+
+            const submitBtn = document.querySelectorAll('.tea-btn');
+            submitBtn.forEach(btn => btn.disabled = true);
 
             const data = { userId: userId, type: 'tea', value: value };
+            
             fetch(GAS_URL, {
                 method: "POST",
                 mode: "no-cors",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(data)
             }).then(() => {
-                // ▼▼▼ ここから追加・変更 ▼▼▼
-                // ※ value の部分は、取得したお茶の杯数の変数名を入れてください
                 let msgText = '🍵 【お茶の記録】\n本日：' + value + '杯 飲みました！';
 
                 if (liff.isInClient()) {
                     liff.sendMessages([{ 'type': 'text', 'text': msgText }]).then(() => {
-                        document.getElementById('form-wrapper').style.display = 'none';
-                        document.getElementById('completed-msg').style.display = 'block';
+                        document.getElementById('tea-section').innerHTML = '<div class="completed-msg">✅ 本日のお茶の記録は完了しています</div>';
                     }).catch((err) => {
-                        document.getElementById('form-wrapper').style.display = 'none';
-                        document.getElementById('completed-msg').style.display = 'block';
+                        document.getElementById('tea-section').innerHTML = '<div class="completed-msg">✅ 本日のお茶の記録は完了しています</div>';
                     });
                 } else {
-                    document.getElementById('form-wrapper').style.display = 'none';
-                    document.getElementById('completed-msg').style.display = 'block';
+                    document.getElementById('tea-section').innerHTML = '<div class="completed-msg">✅ 本日のお茶の記録は完了しています</div>';
                 }
-                alert("記録しました！お疲れ様でした！");
-            }).catch(err => alert("エラー: " + err));
+            }).catch(err => {
+                alert("エラーが発生しました: " + err);
+                submitBtn.forEach(btn => btn.disabled = false);
+            });
         }
     </script>
 </body>
