@@ -100,8 +100,31 @@
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(data)
             }).then(() => {
-                document.getElementById('form-wrapper').style.display = 'none';
-                document.getElementById('completed-msg').style.display = 'block';
+                
+                // ▼▼▼ ここから追加・変更 ▼▼▼
+                let msgText = '🚶‍♂️ 【今週の歩数記録】\n';
+                weekDates.forEach((date, index) => {
+                    let stepValue = document.getElementById(`step-${index}`).value;
+                    msgText += `${date}：${stepValue}歩\n`;
+                });
+
+                if (liff.isInClient()) {
+                    liff.sendMessages([{
+                        'type': 'text',
+                        'text': msgText.trim()
+                    }]).then(() => {
+                        document.getElementById('form-wrapper').style.display = 'none';
+                        document.getElementById('completed-msg').style.display = 'block';
+                    }).catch((err) => {
+                        console.log('メッセージ送信エラー', err);
+                        document.getElementById('form-wrapper').style.display = 'none';
+                        document.getElementById('completed-msg').style.display = 'block';
+                    });
+                } else {
+                    document.getElementById('form-wrapper').style.display = 'none';
+                    document.getElementById('completed-msg').style.display = 'block';
+                }
+                // ▲▲▲ ここまで ▲▲▲
             }).catch(err => {
                 alert("エラーが発生しました: " + err);
                 submitBtn.disabled = false;
