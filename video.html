@@ -33,15 +33,14 @@
         <button id="finish-btn" class="finish-btn" onclick="finishVideo()" disabled>動画を最後まで見ると押せます</button>
     </div>
 
-    <script>
+<script>
         const GAS_URL = "https://script.google.com/macros/s/AKfycbxrxgT6OwQa5WNKiOIzY36dWUhskOX6Q6drJvvXiJwJuG_zlHwswpvhg4CIG6Hu-Mnqvw/exec";
         let userId = "";
         let currentLevel = ""; 
         let player;
         
-        // ★追加：スキップ防止用の変数
         let timeTracker; 
-        let maxTime = 0; // どこまで再生したかを記憶する
+        let maxTime = 0; 
 
         function getTodayString() {
             const now = new Date();
@@ -55,7 +54,8 @@
             }
         }
 
-        document.addEventListener("DOMContentLoaded", checkDailyLimit);
+        // ▼【テスト用】画面が開いた時の制限を無効化
+        // document.addEventListener("DOMContentLoaded", checkDailyLimit);
 
         let tag = document.createElement('script');
         tag.src = "https://www.youtube.com/iframe_api";
@@ -64,7 +64,9 @@
 
         liff.init({ liffId: '2009559911-sodIAoeR' }) 
             .then(() => {
-                checkDailyLimit();
+                // ▼【テスト用】LIFF読み込み後の制限を無効化
+                // checkDailyLimit();
+                
                 if (!liff.isLoggedIn()) {
                     liff.login();
                 } else {
@@ -73,11 +75,15 @@
             });
 
         function sendData(level) {
-            localStorage.setItem('last_video_date', getTodayString());
+            // ▼【テスト用】送信した瞬間の制限を無効化
+            // localStorage.setItem('last_video_date', getTodayString());
+            
             if (player && typeof player.stopVideo === 'function') {
                 player.stopVideo(); 
             }
-            checkDailyLimit();
+            
+            // ▼【テスト用】制限チェックを無効化
+            // checkDailyLimit();
 
             const data = { userId: userId, type: 'video', value: level };
             fetch(GAS_URL, {
@@ -86,22 +92,21 @@
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(data)
             }).then(() => {
-                // ▼▼▼ ここから追加・変更 ▼▼▼
-                let msgText = '🏃‍♂️ 【体操の記録】\n本日：体操を実施しました！';
+                // ▼▼▼ 日付と難易度（コース）入りのメッセージに変更 ▼▼▼
+                let msgText = '🏃‍♂️ 【体操の記録】\n本日（' + getTodayString() + '）：体操を実施しました！\n（コース：' + level + '）';
 
                 if (liff.isInClient()) {
                     liff.sendMessages([{ 'type': 'text', 'text': msgText }]).then(() => {
-                        document.getElementById('form-wrapper').style.display = 'none';
-                        document.getElementById('completed-msg').style.display = 'block';
+                        document.getElementById('video-section').innerHTML = '<div class="completed-msg">✅ 本日の体操は完了しています</div>';
+                        document.getElementById('video-container').style.display = 'none';
                     }).catch((err) => {
-                        document.getElementById('form-wrapper').style.display = 'none';
-                        document.getElementById('completed-msg').style.display = 'block';
+                        document.getElementById('video-section').innerHTML = '<div class="completed-msg">✅ 本日の体操は完了しています</div>';
+                        document.getElementById('video-container').style.display = 'none';
                     });
                 } else {
-                    document.getElementById('form-wrapper').style.display = 'none';
-                    document.getElementById('completed-msg').style.display = 'block';
+                    document.getElementById('video-section').innerHTML = '<div class="completed-msg">✅ 本日の体操は完了しています</div>';
+                    document.getElementById('video-container').style.display = 'none';
                 }
-                // ▲▲▲ ここまで ▲▲▲
                 alert("記録しました！お疲れ様でした！");
             }).catch(err => alert("エラー: " + err));
         }
@@ -115,7 +120,6 @@
             finishBtn.innerText = "動画を最後まで見ると押せます";
             document.getElementById('video-container').style.display = 'block';
             
-            // ★追加：動画を切り替えたら記憶をリセット
             maxTime = 0;
             if (timeTracker) clearInterval(timeTracker);
 
@@ -129,7 +133,7 @@
                     playerVars: { 
                         'playsinline': 1, 
                         'rel': 0,
-                        'disablekb': 1 // キーボード操作でのスキップもブロック
+                        'disablekb': 1
                     },
                     events: { 'onStateChange': onPlayerStateChange }
                 });
@@ -138,38 +142,30 @@
         }
 
         function onPlayerStateChange(event) {
-            // ★追加：再生中のスキップ監視
             if (event.data === YT.PlayerState.PLAYING) {
-                // 1秒ごとに現在位置をチェック
                 timeTracker = setInterval(function() {
                     let currentTime = player.getCurrentTime();
                     
-                    // 既に見た最大時間より2秒以上先へ進めようとした場合
                     if (currentTime > maxTime + 2) {
-                        player.seekTo(maxTime); // 見ていた場所まで強制的に引き戻す
+                        player.seekTo(maxTime); 
                     } else {
-                        // 正常に見ていれば、最大視聴時間を更新
                         if (currentTime > maxTime) {
                             maxTime = currentTime;
                         }
                     }
                 }, 1000);
             } else {
-                // 一時停止や終了時は監視タイマーをストップ
                 clearInterval(timeTracker);
             }
 
-            // 動画が最後まで到達したときの処理
             if (event.data === YT.PlayerState.ENDED) {
                 let duration = player.getDuration();
                 
-                // ★追加：動画の長さいっぱい（95%以上）まで本当に見たか最終チェック
                 if (maxTime >= duration * 0.95) {
                     const finishBtn = document.getElementById('finish-btn');
                     finishBtn.disabled = false;
                     finishBtn.innerText = "体操おわった！（記録する）";
                 } else {
-                    // もし一瞬の隙を突いて最後までスキップされた場合は、元に戻して警告
                     player.seekTo(maxTime);
                     player.playVideo();
                     alert("動画は飛ばさずに最後までご視聴ください🙇‍♂️");
