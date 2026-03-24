@@ -37,14 +37,13 @@
             }
         }
 
-        // ▼【復活】画面が開いた時のチェック
-        document.addEventListener("DOMContentLoaded", checkDailyLimit);
+        // ▼【テスト用】画面が開いた時の制限を無効化
+        // document.addEventListener("DOMContentLoaded", checkDailyLimit);
 
-        // ※お茶用のLIFF ID
         liff.init({ liffId: "2009559911-f5a6WxHg" }) 
             .then(() => {
-                // ▼【復活】LIFF読み込み後のチェック
-                checkDailyLimit();
+                // ▼【テスト用】LIFF読み込み後の制限を無効化
+                // checkDailyLimit();
                 
                 if (!liff.isLoggedIn()) {
                     liff.login();
@@ -54,9 +53,9 @@
             });
 
         function sendData(value) {
-            // ▼【復活】送信した瞬間に「今日の日付」を記憶させて画面を切り替える
-            localStorage.setItem('last_tea_date', getTodayString());
-            checkDailyLimit();
+            // ▼【テスト用】送信した瞬間の制限を無効化
+            // localStorage.setItem('last_tea_date', getTodayString());
+            // checkDailyLimit();
 
             const submitBtn = document.querySelectorAll('.tea-btn');
             submitBtn.forEach(btn => btn.disabled = true);
@@ -69,7 +68,8 @@
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(data)
             }).then(() => {
-                let msgText = '🍵 【お茶の記録】\n本日：' + value + '杯 飲みました！';
+                // ▼▼▼ 日付入りのメッセージに変更 ▼▼▼
+                let msgText = '🍵 【お茶の記録】\n本日（' + getTodayString() + '）：' + value + '杯 飲みました！';
 
                 if (liff.isInClient()) {
                     liff.sendMessages([{ 'type': 'text', 'text': msgText }]).then(() => {
