@@ -37,12 +37,15 @@
             }
         }
 
-        document.addEventListener("DOMContentLoaded", checkDailyLimit);
+       // ▼ 1箇所目：画面が開いた時のチェックを無効化
+        // document.addEventListener("DOMContentLoaded", checkDailyLimit);
 
         // ※お茶用のLIFF IDはそのまま使います
         liff.init({ liffId: "2009559911-f5a6WxHg" }) 
             .then(() => {
-                checkDailyLimit();
+                // ▼ 2箇所目：LIFF読み込み後のチェックを無効化
+                // checkDailyLimit();
+                
                 if (!liff.isLoggedIn()) {
                     liff.login();
                 } else {
