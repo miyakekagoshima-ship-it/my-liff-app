@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>今週の歩数記録</title>
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <style>
+        body { font-family: sans-serif; padding: 20px; background-color: #f9f9f9; color: #333; text-align: center; }
+        h2 { font-size: 20px; color: #2c3e50; margin-bottom: 5px; }
+        p.desc { font-size: 14px; color: #666; margin-bottom: 20px; }
+        
+        #form-wrapper { background-color: #fff; padding: 20px; border-radius: 10px; border: 1px solid #ddd; }
+        .form-group { display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; border-bottom: 1px dashed #eee; padding-bottom: 10px; }
+        label { font-weight: bold; font-size: 16px; width: 40%; text-align: left; }
+        
+        /* 数字入力欄を押しやすくするデザイン */
+        input[type="number"] { width: 50%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 16px; text-align: right; }
+        .unit { font-size: 14px; color: #666; margin-left: 5px; }
+
+        .submit-btn { width: 100%; padding: 15px; background-color: #00B900; color: white; border: none; border-radius: 10px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 20px; }
+        .submit-btn:disabled { background-color: #ccc; cursor: not-allowed; }
+        
+        #completed-msg { display: none; text-align: center; color: #008000; font-size: 18px; font-weight: bold; padding: 30px 20px; background-color: #f0fff0; border-radius: 10px; border: 1px solid #008000; margin-top: 20px; }
+        .close-btn { width: 100%; padding: 15px; background-color: #666; color: white; border: none; border-radius: 10px; font-size: 16px; cursor: pointer; margin-top: 20px; }
+    </style>
+</head>
+<body>
+
+    <h2>🚶‍♂️ 今週の歩数を記録</h2>
+    <p class="desc">アプリの表示を確認して入力してください</p>
+
+    <div id="form-wrapper">
+        <form id="stepsForm">
+            <div id="inputs-container"></div>
+
+            <button type="submit" id="submitBtn" class="submit-btn">記録を送信する</button>
+        </form>
+    </div>
+
+    <div id="completed-msg">
+        ✅ 歩数の記録が完了しました。<br>1週間お疲れ様でした！
+        <br>
+        <button class="close-btn" onclick="liff.closeWindow()">画面を閉じる</button>
+    </div>
+
+    <script>
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbxrxgT6OwQa5WNKiOIzY36dWUhskOX6Q6drJvvXiJwJuG_zlHwswpvhg4CIG6Hu-Mnqvw/exec"; 
+        let userId = "";
+
+        // ==========================================
+        // ★ 毎週の更新は、ここの日付リストを書き換えるだけでOKです！
+        // ==========================================
+        const weekDates = ["8/3", "8/4", "8/5", "8/6", "8/7", "8/8", "8/9"];
+
+        // 画面が開かれたときに、自動で入力欄を作る処理
+        const container = document.getElementById('inputs-container');
+        weekDates.forEach((date, index) => {
+            container.innerHTML += `
+                <div class="form-group">
+                    <label>${date} の歩数</label>
+                    <div style="display: flex; align-items: center; width: 60%; justify-content: flex-end;">
+                        <input type="number" id="step-${index}" placeholder="0" min="0" required>
+                        <span class="unit">歩</span>
+                    </div>
+                </div>
+            `;
+        });
+
+        // ★注意：歩数記録用の新しいLIFF IDを入れてください
+        liff.init({ liffId: "2009559911-40WYu9F6" }) 
+            .then(() => {
+                if (!liff.isLoggedIn()) {
+                    liff.login();
+                } else {
+                    userId = liff.getDecodedIDToken().sub;
+                }
+            });
+
+        document.getElementById('stepsForm').addEventListener('submit', function(event) {
+            event.preventDefault(); 
+
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.innerText = "送信中...";
+
+            // 7日分のデータをまとめて配列にする
+            let stepsData = [];
+            weekDates.forEach((date, index) => {
+                let stepValue = document.getElementById(`step-${index}`).value;
+                stepsData.push({ date: date, steps: stepValue });
+            });
+
+            // GASへ送信
+            const data = { userId: userId, type: 'steps', value: stepsData };
+
+            fetch(GAS_URL, {
+                method: "POST",
+                mode: "no-cors",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(data)
+            }).then(() => {
+                document.getElementById('form-wrapper').style.display = 'none';
+                document.getElementById('completed-msg').style.display = 'block';
+            }).catch(err => {
+                alert("エラーが発生しました: " + err);
+                submitBtn.disabled = false;
+                submitBtn.innerText = "記録を送信する";
+            });
+        });
+    </script>
+</body>
+</html>
