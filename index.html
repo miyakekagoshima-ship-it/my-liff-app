@@ -51,8 +51,9 @@
             });
 
         function sendData(value) {
-            localStorage.setItem('last_tea_date', getTodayString());
-            checkDailyLimit();
+// ▼ この2行の先頭に // をつけて無効化します
+            // localStorage.setItem('last_tea_date', getTodayString());
+            // checkDailyLimit();
 
             const data = { userId: userId, type: 'tea', value: value };
             fetch(GAS_URL, {
