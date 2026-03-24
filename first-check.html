@@ -17,7 +17,12 @@
         .checkbox-label input { margin-right: 10px; transform: scale(1.5); }
         .submit-btn { width: 100%; padding: 15px; background-color: #00B900; color: white; border: none; border-radius: 10px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 20px; }
         .submit-btn:disabled { background-color: #ccc; cursor: not-allowed; }
+        
         #completed-msg { display: none; text-align: center; color: #008000; font-size: 18px; font-weight: bold; padding: 30px 20px; background-color: #f0fff0; border-radius: 10px; border: 1px solid #008000; margin-top: 20px; }
+        
+        /* ★追加：案内文用のスタイル */
+        .info-box { background-color: #fff; border: 1px solid #ccc; border-radius: 8px; padding: 15px; margin-top: 20px; font-size: 15px; color: #333; font-weight: normal; text-align: left; line-height: 1.5; }
+        
         .close-btn { width: 100%; padding: 15px; background-color: #666; color: white; border: none; border-radius: 10px; font-size: 16px; cursor: pointer; margin-top: 20px; }
     </style>
 </head>
@@ -50,13 +55,18 @@
                 </div>
             </div>
 
-            <button type="submit" id="submitBtn" class="submit-btn">登録してメニューを開く</button>
+            <button type="submit" id="submitBtn" class="submit-btn">登録する</button>
         </form>
     </div>
 
     <div id="completed-msg">
         ✅ 登録が完了しました。<br>ご協力ありがとうございます。
-        <br>
+        
+        <div class="info-box">
+            測定会の詳細な日時につきましては、1か月前の <strong>7月2日（木）</strong> に、こちらのLINEにて個別にご案内いたします。<br><br>
+            恐れ入りますが、ご案内まで今しばらくお待ちください。
+        </div>
+
         <button class="close-btn" onclick="liff.closeWindow()">画面を閉じる</button>
     </div>
 
@@ -64,7 +74,7 @@
         const GAS_URL = "https://script.google.com/macros/s/AKfycbxrxgT6OwQa5WNKiOIzY36dWUhskOX6Q6drJvvXiJwJuG_zlHwswpvhg4CIG6Hu-Mnqvw/exec"; 
         let userId = "";
 
-        // ★注意：このフォーム用のLIFF IDを入れてください
+        // ★注意：初回健康チェック用のLIFF IDを入れてください
         liff.init({ liffId: "2009559911-EWccDWvK" }) 
             .then(() => {
                 if (!liff.isLoggedIn()) {
@@ -100,7 +110,6 @@
                 time: timeString
             };
 
-            // ★typeを 'first_check' に変更して送信（以前の登録フォームと区別します）
             const data = { userId: userId, type: 'first_check', value: formData };
 
             fetch(GAS_URL, {
@@ -131,7 +140,7 @@
             }).catch(err => {
                 alert("エラーが発生しました: " + err);
                 submitBtn.disabled = false;
-                submitBtn.innerText = "登録してメニューを開く";
+                submitBtn.innerText = "登録する";
             });
         });
     </script>
