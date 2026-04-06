@@ -6,34 +6,48 @@
     <title>体操動画の記録</title>
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <style>
-        body { font-family: sans-serif; text-align: center; padding: 20px; }
-        button { width: 80%; padding: 15px; margin: 10px; font-size: 18px; cursor: pointer; border-radius: 10px; border: 1px solid #ccc; }
-        .video-btn { background-color: #eaf4ff; }
-        .finish-btn { background-color: #ffeaea; color: red; font-weight: bold; transition: 0.3s; }
-        .finish-btn:disabled { background-color: #e0e0e0; color: #888; cursor: not-allowed; border: 1px solid #ccc; }
-        #video-container { margin-top: 30px; display: none; }
-        #youtube-player { width: 100%; height: 250px; border: none; border-radius: 10px; }
-        .completed-msg { color: #008000; font-size: 18px; font-weight: bold; padding: 20px; background-color: #f0fff0; border-radius: 10px; margin: 10px; border: 1px solid #008000; }
+        body { font-family: sans-serif; text-align: center; padding: 20px; background-color: #f9f9f9; color: #333;}
+        h2 { font-size: 20px; color: #2c3e50; margin-bottom: 15px; }
+        
+        /* ★追加：注意書きの目立つデザイン */
+        .warning-box { background-color: #fff3f3; border: 2px solid #ffcccc; color: #d93025; padding: 15px; border-radius: 10px; font-size: 14px; text-align: left; margin-bottom: 20px; line-height: 1.5; font-weight: bold;}
+        .warning-box span { font-size: 16px; margin-bottom: 5px; display: block; text-align: center;}
+        
+        button { width: 90%; padding: 15px; margin: 10px auto; font-size: 18px; cursor: pointer; border-radius: 10px; border: 1px solid #ccc; font-weight: bold;}
+        .video-btn { background-color: #eaf4ff; color: #0056b3; border-color: #b3d7ff;}
+        .finish-btn { background-color: #ffeaea; color: red; transition: 0.3s; margin-top: 15px;}
+        .finish-btn:disabled { background-color: #e0e0e0; color: #888; cursor: not-allowed; border: 1px solid #ccc; font-weight: normal;}
+        
+        #video-container { margin-top: 20px; display: none; background-color: #fff; padding: 15px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);}
+        #youtube-player { width: 100%; height: 250px; border: none; border-radius: 8px; }
+        .completed-msg { color: #008000; font-size: 18px; font-weight: bold; padding: 20px; background-color: #eaffea; border-radius: 10px; margin: 10px; border: 1px solid #00B900; }
     </style>
 </head>
 <body>
 
     <h2>🏃‍♂️ 体操動画を見る</h2>
+
+    <div class="warning-box">
+        <span>⚠️ 動画視聴に関するご注意</span>
+        ・早送りや動画のスキップを行うと、視聴が完了したと判定されません。<br><br>
+        ・YouTubeアプリを開いて視聴した場合も判定外となります。画面を大きくしたい場合は、動画右下の「全画面（拡大）ボタン」を押して、この画面のままご視聴ください。
+    </div>
+
     <div id="video-section">
-        <p>難易度を選んでください</p>
+        <p style="font-weight: bold; color: #555;">実施する難易度を選んでください</p>
         <button class="video-btn" onclick="showVideo('かんたん', 'QjmdV01-TqI')">かんたん（再生）</button>
         <button class="video-btn" onclick="showVideo('ふつう', 'hKxXh1GrRjI')">ふつう（再生）</button>
         <button class="video-btn" onclick="showVideo('むずかしい', 'qP3jtYbfUK0')">むずかしい（再生）</button>
     </div>
 
     <div id="video-container">
-        <h3 id="video-title"></h3>
+        <h3 id="video-title" style="color: #0056b3; margin-top: 0;"></h3>
         <div id="youtube-player"></div>
-        <br>
         <button id="finish-btn" class="finish-btn" onclick="finishVideo()" disabled>動画を最後まで見ると押せます</button>
     </div>
 
-<script>
+    <script>
+        // ★確認：現在の新しいテスト環境のGAS_URLになっていますか？（違っていたら書き換えてください）
         const GAS_URL = "https://script.google.com/macros/s/AKfycbx_L-7DQEEZ4ybF_35fKbQfxFe9EFnWhY-QGgXpGwBxAUHdJEPoJbPPWkpQ9XQVIBPa/exec";
         let userId = "";
         let currentLevel = ""; 
@@ -49,12 +63,12 @@
 
         function checkDailyLimit() {
             if (localStorage.getItem('last_video_date') === getTodayString()) {
-                document.getElementById('video-section').innerHTML = '<div class="completed-msg">✅ 本日の体操は完了しています</div>';
+                document.querySelector('.warning-box').style.display = 'none'; // 完了時は注意書きも隠す
+                document.getElementById('video-section').innerHTML = '<div class="completed-msg">✅ 本日の体操は完了しています<br>お疲れ様でした！</div>';
                 document.getElementById('video-container').style.display = 'none';
             }
         }
 
-        // ▼【復活】画面が開いた時のチェック
         document.addEventListener("DOMContentLoaded", checkDailyLimit);
 
         let tag = document.createElement('script');
@@ -62,11 +76,10 @@
         let firstScriptTag = document.getElementsByTagName('script')[0];
         firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
+        // ★確認：体操動画用のLIFF IDになっていますか？（違っていたら書き換えてください）
         liff.init({ liffId: '2009684447-6VV60wDd' }) 
             .then(() => {
-                // ▼【復活】LIFF読み込み後のチェック
                 checkDailyLimit();
-                
                 if (!liff.isLoggedIn()) {
                     liff.login();
                 } else {
@@ -75,14 +88,12 @@
             });
 
         function sendData(level) {
-            // ▼【復活】送信した瞬間に「今日の日付」を記憶させて画面を切り替える
             localStorage.setItem('last_video_date', getTodayString());
             
             if (player && typeof player.stopVideo === 'function') {
                 player.stopVideo(); 
             }
             
-            // ▼【復活】制限のチェックを発動
             checkDailyLimit();
 
             const data = { userId: userId, type: 'video', value: level };
@@ -96,17 +107,19 @@
 
                 if (liff.isInClient()) {
                     liff.sendMessages([{ 'type': 'text', 'text': msgText }]).then(() => {
-                        document.getElementById('video-section').innerHTML = '<div class="completed-msg">✅ 本日の体操は完了しています</div>';
+                        document.querySelector('.warning-box').style.display = 'none';
+                        document.getElementById('video-section').innerHTML = '<div class="completed-msg">✅ 本日の体操は完了しています<br>お疲れ様でした！</div>';
                         document.getElementById('video-container').style.display = 'none';
                     }).catch((err) => {
-                        document.getElementById('video-section').innerHTML = '<div class="completed-msg">✅ 本日の体操は完了しています</div>';
+                        document.querySelector('.warning-box').style.display = 'none';
+                        document.getElementById('video-section').innerHTML = '<div class="completed-msg">✅ 本日の体操は完了しています<br>お疲れ様でした！</div>';
                         document.getElementById('video-container').style.display = 'none';
                     });
                 } else {
-                    document.getElementById('video-section').innerHTML = '<div class="completed-msg">✅ 本日の体操は完了しています</div>';
+                    document.querySelector('.warning-box').style.display = 'none';
+                    document.getElementById('video-section').innerHTML = '<div class="completed-msg">✅ 本日の体操は完了しています<br>お疲れ様でした！</div>';
                     document.getElementById('video-container').style.display = 'none';
                 }
-                alert("記録しました！お疲れ様でした！");
             }).catch(err => alert("エラー: " + err));
         }
 
