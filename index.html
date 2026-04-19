@@ -40,16 +40,24 @@
         // ▼【復活】画面が開いた時のチェック
         document.addEventListener("DOMContentLoaded", checkDailyLimit);
 
-        liff.init({ liffId: "2009559911-f5a6WxHg" }) 
+ // 開始用のLIFF ID
+        liff.init({ liffId: "2009684447-p1k1lcRv" }) 
             .then(() => {
-                // ▼【復活】LIFF読み込み後のチェック
-                checkDailyLimit();
-                
                 if (!liff.isLoggedIn()) {
                     liff.login();
                 } else {
-                    userId = liff.getDecodedIDToken().sub;
+                    liff.getProfile().then(profile => {
+                        userId = profile.userId;
+                        document.getElementById('submitBtn').disabled = false;
+                        document.getElementById('submitBtn').innerText = "記録を送信する";
+                    }).catch(err => {
+                        // ★プロフィール取得失敗時のエラーを表示
+                        alert("LINE IDの取得に失敗しました: " + err);
+                    });
                 }
+            }).catch(err => {
+                // ★LIFF初期化失敗時のエラーを表示
+                alert("LIFFの立ち上げに失敗しました: " + err);
             });
 
         function sendData(value) {
