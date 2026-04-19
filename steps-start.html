@@ -113,28 +113,33 @@
 
             const data = { userId: userId, type: 'step_record', value: stepData };
 
+// 送信処理を「確実」なものに変更
             fetch(GAS_URL, {
                 method: "POST",
                 body: JSON.stringify(data)
-            }).then(response => {
-                if (!response.ok && response.type !== 'opaque') {
-                    throw new Error("通信エラーが発生しました");
-                }
-                if (liff.isInClient()) {
-                    liff.sendMessages([{ 'type': 'text', 'text': msgText.trim() }]).then(() => {
+            })
+            .then(response => response.json()) // GASからのJSON返信を待つ
+            .then(res => {
+                if (res.error) {
+                    alert("GAS側でエラーが発生しました:\n" + res.error);
+                    submitBtn.disabled = false;
+                    submitBtn.innerText = "記録を送信する";
+                } else {
+                    // ★GASから成功の返事が来てから、初めて画面を切り替える
+                    localStorage.setItem(`submitted_steps_${periodName}`, 'true'); 
+                    if (liff.isInClient()) {
+                        liff.sendMessages([{ 'type': 'text', 'text': msgText.trim() }]).then(() => {
+                            document.getElementById('form-wrapper').style.display = 'none';
+                            document.getElementById('completed-msg').style.display = 'block';
+                        });
+                    } else {
                         document.getElementById('form-wrapper').style.display = 'none';
                         document.getElementById('completed-msg').style.display = 'block';
-                    });
-                } else {
-                    document.getElementById('form-wrapper').style.display = 'none';
-                    document.getElementById('completed-msg').style.display = 'block';
+                    }
                 }
-            }).catch(err => {
-                alert("送信エラー: " + err.message);
+            })
+            .catch(err => {
+                alert("【重要】データがGASに届きませんでした。\n理由: " + err.message + "\n\nGASのURLが最新か、デプロイ権限が「全員」になっているか再確認してください。");
                 submitBtn.disabled = false;
                 submitBtn.innerText = "記録を送信する";
             });
-        });
-    </script>
-</body>
-</html>
