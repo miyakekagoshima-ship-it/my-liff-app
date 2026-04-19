@@ -3,56 +3,85 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>週1回の活動記録</title>
+    <title>お茶の飲用記録</title>
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <style>
-        body { font-family: sans-serif; padding: 15px; background-color: #f4f6f9; color: #333; }
-        h2 { text-align: center; font-size: 18px; color: #2c3e50; margin-bottom: 5px; }
-        p.desc { text-align: center; font-size: 13px; color: #666; margin-bottom: 15px; }
+        body { font-family: sans-serif; padding: 15px; background-color: #f0f4f0; color: #333; }
+        .header { text-align: center; margin-bottom: 20px; }
+        h2 { font-size: 18px; color: #2d5a27; margin-bottom: 5px; }
+        .desc { font-size: 13px; color: #555; line-height: 1.4; background: #fff; padding: 10px; border-radius: 8px; border-left: 4px solid #00B900; }
         
-        .day-card { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 12px; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .day-card h3 { margin: 0 0 10px 0; font-size: 16px; color: #00B900; border-bottom: 1px solid #eee; padding-bottom: 5px; }
-        .input-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-weight: bold;}
-        input[type="number"] { width: 70px; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 16px; text-align: right; }
-        .unit { font-size: 14px; color: #666; margin-left: 5px; font-weight: normal;}
+        .day-card { background: #fff; border: 1px solid #e0e0e0; border-radius: 12px; padding: 15px; margin-bottom: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .day-card h3 { margin: 0 0 12px 0; font-size: 16px; color: #2d5a27; border-bottom: 1px solid #f0f0f0; padding-bottom: 5px; }
+        
+        .input-row { display: flex; justify-content: space-between; align-items: center; }
+        .label-text { font-weight: bold; font-size: 15px; }
+        
+        select { 
+            padding: 10px; 
+            border: 2px solid #00B900; 
+            border-radius: 8px; 
+            font-size: 16px; 
+            width: 100px; 
+            background-color: #fff;
+            color: #333;
+            appearance: none;
+            text-align: center;
+        }
 
-        .submit-btn { width: 100%; padding: 15px; background-color: #00B900; color: white; border: none; border-radius: 10px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 10px; }
-        .submit-btn:disabled { background-color: #ccc; cursor: not-allowed; }
+        .submit-btn { width: 100%; padding: 16px; background-color: #00B900; color: white; border: none; border-radius: 12px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 15px; box-shadow: 0 4px 0 #008000; }
+        .submit-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #008000; }
+        .submit-btn:disabled { background-color: #ccc; box-shadow: none; transform: none; }
         
-        #completed-msg { display: none; text-align: center; color: #008000; font-size: 16px; font-weight: bold; padding: 30px 15px; background-color: #eaffea; border-radius: 10px; border: 1px solid #00B900; margin-top: 20px; }
-        .close-btn { width: 100%; padding: 15px; background-color: #666; color: white; border: none; border-radius: 10px; font-size: 16px; cursor: pointer; margin-top: 20px; }
+        .completed-msg { text-align: center; color: #2d5a27; font-size: 16px; font-weight: bold; padding: 30px 15px; background-color: #eaffea; border-radius: 12px; border: 1px solid #00B900; margin-top: 20px; }
+        .close-btn { width: 100%; padding: 15px; background-color: #666; color: white; border: none; border-radius: 10px; font-size: 16px; margin-top: 20px; }
     </style>
 </head>
 <body>
 
-    <h2 id="page-title">活動記録（第〇週目）</h2>
-    <p class="desc">1週間分のお茶と歩数を入力してください</p>
+    <div class="header">
+        <h2 id="page-title">プロジェクト茶の記録</h2>
+        <div class="desc">
+            大学からお渡しした専用茶（500ml）を、1日にどれくらい飲まれたか教えてください。
+        </div>
+    </div>
 
     <div id="form-wrapper">
         <form id="weeklyForm">
             <div id="inputs-container"></div>
-            <button type="submit" id="submitBtn" class="submit-btn">記録を送信する</button>
+            <button type="submit" id="submitBtn" class="submit-btn" disabled>読み込み中...</button>
         </form>
     </div>
 
-    <div id="completed-msg">
-        ✅ 1週間分の記録を送信しました。<br>今週もお疲れ様でした！
+    <div id="completed-msg" style="display: none;">
+        <div class="completed-msg">
+            ✅ 1週間分の記録を送信しました。<br>ご協力ありがとうございました。
+        </div>
         <button class="close-btn" onclick="liff.closeWindow()">画面を閉じる</button>
     </div>
 
     <script>
-        // ★ 第2段階で取得した新しいGASのURLに書き換えてください
         const GAS_URL = "https://script.google.com/macros/s/AKfycbx_L-7DQEEZ4ybF_35fKbQfxFe9EFnWhY-QGgXpGwBxAUHdJEPoJbPPWkpQ9XQVIBPa/exec"; 
         let userId = "";
 
         // ==========================================
-        // 🔧 毎週の更新はここを書き換えるだけでOKです！
+        // 🔧 【週ごとの設定】ここを変更
         // ==========================================
-        const weekNumber = 1; // 第何週目か
+        const weekNumber = 1; 
         const weekDates = ["8/2(日)", "8/3(月)", "8/4(火)", "8/5(水)", "8/6(木)", "8/7(金)", "8/8(土)"];
         // ==========================================
 
-        document.getElementById('page-title').innerText = `活動記録（第${weekNumber}週目）`;
+        document.getElementById('page-title').innerText = `プロジェクト茶の記録（第${weekNumber}週）`;
+
+        const storageKey = `submitted_tea_week_${weekNumber}`;
+        if (localStorage.getItem(storageKey) === 'true') {
+            document.getElementById('form-wrapper').innerHTML = `
+                <div class="completed-msg">
+                    ✅ 第${weekNumber}週目の記録は<br>送信済みです。
+                </div>
+                <button class="close-btn" onclick="liff.closeWindow()">画面を閉じる</button>
+            `;
+        }
 
         const container = document.getElementById('inputs-container');
         weekDates.forEach((date, index) => {
@@ -60,24 +89,25 @@
                 <div class="day-card">
                     <h3>${date}</h3>
                     <div class="input-row">
-                        <span>🍵 お茶</span>
-                        <div><input type="number" id="tea-${index}" value="0" min="0" required><span class="unit">杯</span></div>
-                    </div>
-                    <div class="input-row">
-                        <span>🚶‍♂️ 歩数</span>
-                        <div><input type="number" id="step-${index}" value="0" min="0" required><span class="unit">歩</span></div>
+                        <span class="label-text">🍵 お飲みになった量</span>
+                        <select id="tea-${index}" required>
+                            <option value="0">0本</option>
+                            <option value="1">1本</option>
+                            <option value="2">2本</option>
+                        </select>
                     </div>
                 </div>
             `;
         });
 
-        // ★ 新しく作成する「統合記録フォーム」のLIFF IDを入れます
-        liff.init({ liffId: "2009684447-8z4qWEpH" }) 
+        liff.init({ liffId: "ここに各週のLIFF_ID" }) 
             .then(() => {
                 if (!liff.isLoggedIn()) {
                     liff.login();
                 } else {
                     userId = liff.getDecodedIDToken().sub;
+                    document.getElementById('submitBtn').disabled = false;
+                    document.getElementById('submitBtn').innerText = "記録を送信する";
                 }
             });
 
@@ -88,13 +118,12 @@
             submitBtn.innerText = "送信中...";
 
             let weeklyData = [];
-            let msgText = `📅 【第${weekNumber}週目の記録】\n`;
+            let msgText = `📅 【第${weekNumber}週目のお茶記録】\n`;
 
             weekDates.forEach((date, index) => {
                 let teaVal = document.getElementById(`tea-${index}`).value;
-                let stepVal = document.getElementById(`step-${index}`).value;
-                weeklyData.push({ week: weekNumber, date: date, tea: teaVal, steps: stepVal });
-                msgText += `${date}：🍵 ${teaVal}杯 / 🚶‍♂️ ${stepVal}歩\n`;
+                weeklyData.push({ week: weekNumber, date: date, tea: teaVal });
+                msgText += `${date}：🍵 ${teaVal}本\n`;
             });
 
             const data = { userId: userId, type: 'weekly_record', value: weeklyData };
@@ -105,11 +134,12 @@
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(data)
             }).then(() => {
+                localStorage.setItem(storageKey, 'true');
                 if (liff.isInClient()) {
                     liff.sendMessages([{ 'type': 'text', 'text': msgText.trim() }]).then(() => {
                         document.getElementById('form-wrapper').style.display = 'none';
                         document.getElementById('completed-msg').style.display = 'block';
-                    }).catch(err => console.log(err));
+                    });
                 } else {
                     document.getElementById('form-wrapper').style.display = 'none';
                     document.getElementById('completed-msg').style.display = 'block';
