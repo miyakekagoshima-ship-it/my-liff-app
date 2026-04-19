@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>歩数の記録</title>
+    <title>歩数の記録（テスト用）</title>
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <style>
         body { font-family: sans-serif; padding: 15px; background-color: #f0f8ff; color: #333; }
@@ -27,7 +27,7 @@
 
     <div class="header">
         <span id="period-display" class="period-title">【開始】歩数の記録</span>
-        <div class="desc">大学より配布したスマートウォッチ（Xiaomi スマートバンド）の連携アプリを確認して入力してください。</div>
+        <div class="desc">大学より配布したスマートウォッチ（Xiaomi スマートバンド）の連携アプリを確認して入力してください。<br><strong style="color:red;">※現在テストモード（何度でも送信可能）</strong></div>
     </div>
 
     <div id="form-wrapper">
@@ -43,7 +43,7 @@
     </div>
 
     <script>
-        // ★★★超重要：ここで今コピーした「最新のGAS_URL」に書き換えてください！★★★
+        // ★ 最新のGAS_URLに書き換え済みです
         const GAS_URL = "https://script.google.com/macros/s/AKfycbxrxgT6OwQa5WNKiOIzY36dWUhskOX6Q6drJvvXiJwJuG_zlHwswpvhg4CIG6Hu-Mnqvw/exec"; 
         
         let userId = "";
@@ -55,6 +55,8 @@
         const recordDates = ["8/3(月)", "8/4(火)", "8/5(水)", "8/6(木)", "8/7(金)", "8/8(土)", "8/9(日)"];
         // ==========================================
 
+        // ★テストのため、ここの「送信済みブロック機能」を一時的に無効化（コメントアウト）しています
+        /*
         const storageKey = `submitted_steps_${periodName}`;
         if (localStorage.getItem(storageKey) === 'true') {
             document.getElementById('form-wrapper').innerHTML = `
@@ -64,6 +66,7 @@
                 <button class="close-btn" onclick="liff.closeWindow()">画面を閉じる</button>
             `;
         }
+        */
 
         const container = document.getElementById('inputs-container');
         recordDates.forEach((date, index) => {
@@ -117,7 +120,9 @@
                 headers: { "Content-Type": "text/plain" },
                 body: JSON.stringify(data)
             }).then(() => {
-                localStorage.setItem(storageKey, 'true');
+                // ★テストのため、送信完了の記憶づけも無効化しています
+                // localStorage.setItem(`submitted_steps_${periodName}`, 'true'); 
+                
                 if (liff.isInClient()) {
                     liff.sendMessages([{ 'type': 'text', 'text': msgText.trim() }]).then(() => {
                         document.getElementById('form-wrapper').style.display = 'none';
