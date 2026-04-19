@@ -18,7 +18,7 @@
         input[type="number"] { padding: 12px; border: 2px solid #007BFF; border-radius: 10px; font-size: 18px; width: 100px; background-color: #fff; color: #333; font-weight: bold; text-align: right; }
         .unit { font-size: 16px; color: #666; margin-left: 5px; font-weight: bold;}
         .submit-btn { width: 100%; padding: 18px; background-color: #007BFF; color: white; border: none; border-radius: 15px; font-size: 20px; font-weight: bold; cursor: pointer; margin-top: 15px; box-shadow: 0 5px 0 #0056b3; }
-        .submit-btn:disabled { background-color: #ccc; box-shadow: none; }
+        .submit-btn:disabled { background-color: #ccc; box-shadow: none; transform: none; }
         .completed-msg { text-align: center; color: #0056b3; font-size: 18px; font-weight: bold; padding: 40px 20px; background-color: #e6f2ff; border-radius: 15px; border: 2px solid #007BFF; margin-top: 20px; }
         .close-btn { width: 100%; padding: 18px; background-color: #666; color: white; border: none; border-radius: 12px; font-size: 18px; margin-top: 25px; }
     </style>
@@ -43,8 +43,9 @@
     </div>
 
     <script>
-        // ★GASのURLが最新のものか再度ご確認ください
-        const GAS_URL = "https://script.google.com/macros/s/AKfycbx_L-7DQEEZ4ybF_35fKbQfxFe9EFnWhY-QGgXpGwBxAUHdJEPoJbPPWkpQ9XQVIBPa/exec"; 
+        // ★★★超重要：ここで今コピーした「最新のGAS_URL」に書き換えてください！★★★
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbxrxgT6OwQa5WNKiOIzY36dWUhskOX6Q6drJvvXiJwJuG_zlHwswpvhg4CIG6Hu-Mnqvw/exec"; 
+        
         let userId = "";
 
         // ==========================================
@@ -80,6 +81,7 @@
             `;
         });
 
+        // 開始用のLIFF ID
         liff.init({ liffId: "2009684447-p1k1lcRv" }) 
             .then(() => {
                 if (!liff.isLoggedIn()) {
@@ -111,7 +113,7 @@
 
             fetch(GAS_URL, {
                 method: "POST",
-                // ★エラー回避のため text/plain で送信するように指定
+                mode: "no-cors",
                 headers: { "Content-Type": "text/plain" },
                 body: JSON.stringify(data)
             }).then(() => {
