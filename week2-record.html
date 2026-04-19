@@ -7,43 +7,44 @@
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <style>
         body { font-family: sans-serif; padding: 15px; background-color: #f0f4f0; color: #333; }
-        .header { text-align: center; margin-bottom: 20px; }
-        h2 { font-size: 18px; color: #2d5a27; margin-bottom: 5px; }
-        .desc { font-size: 13px; color: #555; line-height: 1.4; background: #fff; padding: 10px; border-radius: 8px; border-left: 4px solid #00B900; }
+        .header { text-align: center; margin-bottom: 25px; padding: 0 5px; }
         
-        .day-card { background: #fff; border: 1px solid #e0e0e0; border-radius: 12px; padding: 15px; margin-bottom: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .day-card h3 { margin: 0 0 12px 0; font-size: 16px; color: #2d5a27; border-bottom: 1px solid #f0f0f0; padding-bottom: 5px; }
+        /* タイトル文字を大きく、視認性を向上 */
+        h2 { font-size: 22px; color: #2d5a27; line-height: 1.4; margin-bottom: 15px; font-weight: bold; }
+        .week-title { font-size: 16px; color: #555; margin-bottom: 10px; display: block; }
+        
+        .day-card { background: #fff; border: 1px solid #e0e0e0; border-radius: 12px; padding: 18px; margin-bottom: 15px; box-shadow: 0 3px 6px rgba(0,0,0,0.08); }
+        .day-card h3 { margin: 0 0 15px 0; font-size: 18px; color: #2d5a27; border-bottom: 2px solid #f0f0f0; padding-bottom: 8px; }
         
         .input-row { display: flex; justify-content: space-between; align-items: center; }
-        .label-text { font-weight: bold; font-size: 15px; }
+        .label-text { font-weight: bold; font-size: 16px; color: #444; }
         
+        /* プルダウンの操作性を向上 */
         select { 
-            padding: 10px; 
+            padding: 12px; 
             border: 2px solid #00B900; 
-            border-radius: 8px; 
-            font-size: 16px; 
-            width: 100px; 
+            border-radius: 10px; 
+            font-size: 18px; 
+            width: 120px; 
             background-color: #fff;
             color: #333;
-            appearance: none;
+            font-weight: bold;
             text-align: center;
         }
 
-        .submit-btn { width: 100%; padding: 16px; background-color: #00B900; color: white; border: none; border-radius: 12px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 15px; box-shadow: 0 4px 0 #008000; }
-        .submit-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #008000; }
+        .submit-btn { width: 100%; padding: 18px; background-color: #00B900; color: white; border: none; border-radius: 15px; font-size: 20px; font-weight: bold; cursor: pointer; margin-top: 15px; box-shadow: 0 5px 0 #008000; }
+        .submit-btn:active { transform: translateY(3px); box-shadow: 0 2px 0 #008000; }
         .submit-btn:disabled { background-color: #ccc; box-shadow: none; transform: none; }
         
-        .completed-msg { text-align: center; color: #2d5a27; font-size: 16px; font-weight: bold; padding: 30px 15px; background-color: #eaffea; border-radius: 12px; border: 1px solid #00B900; margin-top: 20px; }
-        .close-btn { width: 100%; padding: 15px; background-color: #666; color: white; border: none; border-radius: 10px; font-size: 16px; margin-top: 20px; }
+        .completed-msg { text-align: center; color: #2d5a27; font-size: 18px; font-weight: bold; padding: 40px 20px; background-color: #eaffea; border-radius: 15px; border: 2px solid #00B900; margin-top: 20px; }
+        .close-btn { width: 100%; padding: 18px; background-color: #666; color: white; border: none; border-radius: 12px; font-size: 18px; margin-top: 25px; }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <h2 id="page-title">プロジェクト茶の記録</h2>
-        <div class="desc">
-            大学からお渡しした専用茶（500ml）を、1日にどれくらい飲まれたか教えてください。
-        </div>
+        <span id="week-display" class="week-title">第1週</span>
+        <h2 id="main-instruction">大学からお渡ししたお茶の粉末を、1日に何本飲まれたか教えてください</h2>
     </div>
 
     <div id="form-wrapper">
@@ -65,13 +66,13 @@
         let userId = "";
 
         // ==========================================
-        // 🔧 【週ごとの設定】ここを変更
+        // 🔧 【週ごとの設定】
         // ==========================================
-const weekNumber = 2;
+        const weekNumber = 2;
 const weekDates = ["8/7(金)", "8/8(土)", "8/9(日)", "8/10(月)", "8/11(火)", "8/12(水)", "8/13(木)"];
         // ==========================================
 
-        document.getElementById('page-title').innerText = `プロジェクト茶の記録（第${weekNumber}週）`;
+        document.getElementById('week-display').innerText = `第${weekNumber}週`;
 
         const storageKey = `submitted_tea_week_${weekNumber}`;
         if (localStorage.getItem(storageKey) === 'true') {
@@ -89,7 +90,7 @@ const weekDates = ["8/7(金)", "8/8(土)", "8/9(日)", "8/10(月)", "8/11(火)",
                 <div class="day-card">
                     <h3>${date}</h3>
                     <div class="input-row">
-                        <span class="label-text">🍵 お飲みになった量</span>
+                        <span class="label-text">飲んだ本数（0～2本）</span>
                         <select id="tea-${index}" required>
                             <option value="0">0本</option>
                             <option value="1">1本</option>
@@ -105,9 +106,11 @@ const weekDates = ["8/7(金)", "8/8(土)", "8/9(日)", "8/10(月)", "8/11(火)",
                 if (!liff.isLoggedIn()) {
                     liff.login();
                 } else {
-                    userId = liff.getDecodedIDToken().sub;
-                    document.getElementById('submitBtn').disabled = false;
-                    document.getElementById('submitBtn').innerText = "記録を送信する";
+                    liff.getProfile().then(profile => {
+                        userId = profile.userId;
+                        document.getElementById('submitBtn').disabled = false;
+                        document.getElementById('submitBtn').innerText = "記録を送信する";
+                    });
                 }
             });
 
