@@ -84,7 +84,7 @@
             `;
         });
 
-        // 開始用のLIFF ID
+// 開始用のLIFF ID
         liff.init({ liffId: "2009684447-p1k1lcRv" }) 
             .then(() => {
                 if (!liff.isLoggedIn()) {
@@ -94,8 +94,14 @@
                         userId = profile.userId;
                         document.getElementById('submitBtn').disabled = false;
                         document.getElementById('submitBtn').innerText = "記録を送信する";
+                    }).catch(err => {
+                        // ★プロフィール取得失敗時のエラーを表示
+                        alert("LINE IDの取得に失敗しました: " + err);
                     });
                 }
+            }).catch(err => {
+                // ★LIFF初期化失敗時のエラーを表示
+                alert("LIFFの立ち上げに失敗しました: " + err);
             });
 
         document.getElementById('stepForm').addEventListener('submit', function(event) {
