@@ -3,39 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>歩数の記録</title>
+    <title>歩数の記録（テスト版）</title>
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <style>
         body { font-family: sans-serif; padding: 15px; background-color: #f0f8ff; color: #333; }
         .header { text-align: center; margin-bottom: 25px; padding: 0 5px; }
-        
         h2 { font-size: 20px; color: #0056b3; line-height: 1.4; margin-bottom: 10px; font-weight: bold; }
         .period-title { font-size: 16px; color: #fff; background-color: #007BFF; padding: 5px 15px; border-radius: 20px; display: inline-block; margin-bottom: 15px; font-weight: bold;}
         .desc { font-size: 14px; color: #555; line-height: 1.5; background: #fff; padding: 12px; border-radius: 8px; border-left: 4px solid #007BFF; text-align: left; margin-bottom: 20px;}
-        
         .day-card { background: #fff; border: 1px solid #d0e3f5; border-radius: 12px; padding: 18px; margin-bottom: 15px; box-shadow: 0 3px 6px rgba(0,123,255,0.08); }
         .day-card h3 { margin: 0 0 15px 0; font-size: 18px; color: #0056b3; border-bottom: 2px solid #f0f8ff; padding-bottom: 8px; }
-        
         .input-row { display: flex; justify-content: space-between; align-items: center; }
         .label-text { font-weight: bold; font-size: 16px; color: #444; }
-        
-        input[type="number"] { 
-            padding: 12px; 
-            border: 2px solid #007BFF; 
-            border-radius: 10px; 
-            font-size: 18px; 
-            width: 100px; 
-            background-color: #fff;
-            color: #333;
-            font-weight: bold;
-            text-align: right;
-        }
+        input[type="number"] { padding: 12px; border: 2px solid #007BFF; border-radius: 10px; font-size: 18px; width: 100px; background-color: #fff; color: #333; font-weight: bold; text-align: right; }
         .unit { font-size: 16px; color: #666; margin-left: 5px; font-weight: bold;}
-
         .submit-btn { width: 100%; padding: 18px; background-color: #007BFF; color: white; border: none; border-radius: 15px; font-size: 20px; font-weight: bold; cursor: pointer; margin-top: 15px; box-shadow: 0 5px 0 #0056b3; }
-        .submit-btn:active { transform: translateY(3px); box-shadow: 0 2px 0 #0056b3; }
-        .submit-btn:disabled { background-color: #ccc; box-shadow: none; transform: none; }
-        
+        .submit-btn:disabled { background-color: #ccc; box-shadow: none; }
         .completed-msg { text-align: center; color: #0056b3; font-size: 18px; font-weight: bold; padding: 40px 20px; background-color: #e6f2ff; border-radius: 15px; border: 2px solid #007BFF; margin-top: 20px; }
         .close-btn { width: 100%; padding: 18px; background-color: #666; color: white; border: none; border-radius: 12px; font-size: 18px; margin-top: 25px; }
     </style>
@@ -43,10 +26,8 @@
 <body>
 
     <div class="header">
-        <span id="period-display" class="period-title">〇〇の記録</span>
-        <div class="desc">
-            大学より配布したスマートウォッチ（Xiaomi スマートバンド）の連携アプリ（Mi Fitness）を確認して、1日ごとの歩数を入力してください。
-        </div>
+        <span id="period-display" class="period-title">【開始】歩数の記録</span>
+        <div class="desc">大学より配布したスマートウォッチ（Xiaomi スマートバンド）の連携アプリを確認して入力してください。</div>
     </div>
 
     <div id="form-wrapper">
@@ -57,34 +38,17 @@
     </div>
 
     <div id="completed-msg" style="display: none;">
-        <div class="completed-msg">
-            ✅ 歩数の記録を送信しました。<br>ご協力ありがとうございました。
-        </div>
+        <div class="completed-msg">✅ 歩数の記録を送信しました。</div>
         <button class="close-btn" onclick="liff.closeWindow()">画面を閉じる</button>
     </div>
 
     <script>
         const GAS_URL = "https://script.google.com/macros/s/AKfycbx_L-7DQEEZ4ybF_35fKbQfxFe9EFnWhY-QGgXpGwBxAUHdJEPoJbPPWkpQ9XQVIBPa/exec"; 
         let userId = "";
+        const periodName = "開始"; 
+        const recordDates = ["8/3(月)", "8/4(火)", "8/5(水)", "8/6(木)", "8/7(金)", "8/8(土)", "8/9(日)"];
 
-        // ==========================================
-        // 🔧 【記録時期ごとの設定】ファイルごとにここを変更
-        // ==========================================
-const periodName = "開始"; 
-const recordDates = ["8/3(月)", "8/4(火)", "8/5(水)", "8/6(木)", "8/7(金)", "8/8(土)", "8/9(日)"];
-        // ==========================================
-
-        document.getElementById('period-display').innerText = `【${periodName}】歩数の記録`;
-
-        const storageKey = `submitted_steps_${periodName}`;
-        if (localStorage.getItem(storageKey) === 'true') {
-            document.getElementById('form-wrapper').innerHTML = `
-                <div class="completed-msg">
-                    ✅ 【${periodName}】の歩数記録は<br>すでに送信済みです。
-                </div>
-                <button class="close-btn" onclick="liff.closeWindow()">画面を閉じる</button>
-            `;
-        }
+        // ★ テスト用：一時的に送信済みチェックを無効化しています
 
         const container = document.getElementById('inputs-container');
         recordDates.forEach((date, index) => {
@@ -94,7 +58,7 @@ const recordDates = ["8/3(月)", "8/4(火)", "8/5(水)", "8/6(木)", "8/7(金)",
                     <div class="input-row">
                         <span class="label-text">🚶‍♂️ 歩数</span>
                         <div>
-                            <input type="number" id="step-${index}" placeholder="0" min="0" max="100000" oninput="this.value = this.value.replace(/[^0-9]/g, ''); if(this.value > 100000) this.value = 100000;" required>
+                            <input type="number" id="step-${index}" placeholder="0" min="0" required>
                             <span class="unit">歩</span>
                         </div>
                     </div>
@@ -123,7 +87,6 @@ const recordDates = ["8/3(月)", "8/4(火)", "8/5(水)", "8/6(木)", "8/7(金)",
 
             let stepData = [];
             let msgText = `📅 【${periodName}の歩数記録】\n`;
-
             recordDates.forEach((date, index) => {
                 let stepVal = document.getElementById(`step-${index}`).value || 0;
                 stepData.push({ period: periodName, date: date, steps: stepVal });
@@ -132,24 +95,24 @@ const recordDates = ["8/3(月)", "8/4(火)", "8/5(水)", "8/6(木)", "8/7(金)",
 
             const data = { userId: userId, type: 'step_record', value: stepData };
 
+            // ★ エラー特定のために詳細ログを出す設定
             fetch(GAS_URL, {
                 method: "POST",
-                mode: "no-cors",
-                headers: { "Content-Type": "application/json" },
+                mode: "no-cors", 
                 body: JSON.stringify(data)
             }).then(() => {
-                localStorage.setItem(storageKey, 'true');
+                // 送信後のUI切り替え
                 if (liff.isInClient()) {
                     liff.sendMessages([{ 'type': 'text', 'text': msgText.trim() }]).then(() => {
                         document.getElementById('form-wrapper').style.display = 'none';
                         document.getElementById('completed-msg').style.display = 'block';
-                    });
+                    }).catch(e => alert("LINE送信失敗: " + e));
                 } else {
                     document.getElementById('form-wrapper').style.display = 'none';
                     document.getElementById('completed-msg').style.display = 'block';
                 }
             }).catch(err => {
-                alert("エラーが発生しました: " + err);
+                alert("GAS通信エラー詳細: " + err);
                 submitBtn.disabled = false;
                 submitBtn.innerText = "記録を送信する";
             });
