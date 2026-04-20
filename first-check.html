@@ -13,7 +13,6 @@
         .required { color: red; font-size: 12px; margin-left: 5px; }
         input[type="text"], input[type="date"], select { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 16px; background-color: #fff;}
         
-        /* はい/いいえ の押しやすいボタンデザイン */
         .radio-group { display: flex; gap: 10px; }
         .radio-label { flex: 1; text-align: center; background-color: #f0f0f0; padding: 12px 0; border-radius: 5px; border: 1px solid #ccc; cursor: pointer; font-size: 16px; font-weight: bold; transition: 0.2s; }
         .radio-group input[type="radio"] { display: none; }
@@ -44,7 +43,7 @@
             </div>
 
             <div class="form-group">
-                <label>2026年度のたるみず元気プロジェクトに参加しましたか？<span class="required">※必須</span></label>
+                <label>2026年度のプロジェクトに参加しましたか？<span class="required">※必須</span></label>
                 <div class="radio-group">
                     <input type="radio" id="partYes" name="project2026" value="はい" required>
                     <label for="partYes" class="radio-label">はい</label>
@@ -73,10 +72,10 @@
     </div>
 
     <script>
-        const GAS_URL = "https://script.google.com/macros/s/AKfycbx_L-7DQEEZ4ybF_35fKbQfxFe9EFnWhY-QGgXpGwBxAUHdJEPoJbPPWkpQ9XQVIBPa/exec";
+        // ★ 歩数記録と同じ、最新の正しいGAS URLに変更しました
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbxrxgT6OwQa5WNKiOIzY36dWUhskOX6Q6drJvvXiJwJuG_zlHwswpvhg4CIG6Hu-Mnqvw/exec";
         let userId = "";
 
-        // ★初回健康チェック用のLIFF ID
         liff.init({ liffId: "2009684447-RrGH1PPx" }) 
             .then(() => {
                 if (!liff.isLoggedIn()) {
@@ -105,37 +104,42 @@
             submitBtn.disabled = true;
             submitBtn.innerText = "送信中...";
 
-            // ★フォームのデータを収集
             const formData = {
                 name: document.getElementById('nameKanji').value,
                 dob: document.getElementById('dob').value,
                 time: document.getElementById('time').value,
-                // ▼ 今回追加した「参加歴」のデータを取得
                 participated: document.querySelector('input[name="project2026"]:checked').value
             };
 
             const data = { userId: userId, type: 'first_check', value: formData };
 
+            // ★ no-corsを外し、確実な通信を行う仕様にアップグレード
             fetch(GAS_URL, {
                 method: "POST",
-                mode: "no-cors",
-                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(data)
-            }).then(() => {
-                // 自動メッセージ送信（希望時間と参加歴をトークに残す）
-                let msgText = `📝 【測定会の参加希望】\n氏名：${formData.name}\n希望：${formData.time}\n2026年参加：${formData.participated}`;
-                
-                if (liff.isInClient()) {
-                    liff.sendMessages([{ 'type': 'text', 'text': msgText }]).then(() => {
+            })
+            .then(response => response.json())
+            .then(res => {
+                if (res.error) {
+                    alert("エラーが発生しました:\n" + res.error);
+                    submitBtn.disabled = false;
+                    submitBtn.innerText = "送信する";
+                } else {
+                    let msgText = `📝 【測定会の参加希望】\n氏名：${formData.name}\n希望：${formData.time}\n2026年参加：${formData.participated}`;
+                    
+                    if (liff.isInClient()) {
+                        liff.sendMessages([{ 'type': 'text', 'text': msgText }]).then(() => {
+                            document.getElementById('form-wrapper').style.display = 'none';
+                            document.getElementById('completed-msg').style.display = 'block';
+                        }).catch(err => console.log(err));
+                    } else {
                         document.getElementById('form-wrapper').style.display = 'none';
                         document.getElementById('completed-msg').style.display = 'block';
-                    }).catch(err => console.log(err));
-                } else {
-                    document.getElementById('form-wrapper').style.display = 'none';
-                    document.getElementById('completed-msg').style.display = 'block';
+                    }
                 }
-            }).catch(err => {
-                alert("エラーが発生しました: " + err);
+            })
+            .catch(err => {
+                alert("送信エラー: " + err.message);
                 submitBtn.disabled = false;
                 submitBtn.innerText = "送信する";
             });
