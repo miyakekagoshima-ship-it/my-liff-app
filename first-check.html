@@ -13,10 +13,11 @@
         .required { color: red; font-size: 12px; margin-left: 5px; }
         input[type="text"], input[type="date"], select { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 16px; background-color: #fff;}
         
-        .radio-group { display: flex; gap: 10px; }
-        .radio-label { flex: 1; text-align: center; background-color: #f0f0f0; padding: 12px 0; border-radius: 5px; border: 1px solid #ccc; cursor: pointer; font-size: 16px; font-weight: bold; transition: 0.2s; }
-        .radio-group input[type="radio"] { display: none; }
-        .radio-group input[type="radio"]:checked + .radio-label { background-color: #eaffea; border-color: #00B900; color: #00B900; }
+        /* 選択肢のデザイン（チェックボックスとラジオボタン共通） */
+        .choice-group { display: flex; flex-direction: column; gap: 10px; }
+        .choice-label { display: block; text-align: center; background-color: #f0f0f0; padding: 12px; border-radius: 5px; border: 1px solid #ccc; cursor: pointer; font-size: 16px; font-weight: bold; transition: 0.2s; }
+        input[type="radio"], input[type="checkbox"] { display: none; }
+        input[type="radio"]:checked + .choice-label, input[type="checkbox"]:checked + .choice-label { background-color: #eaffea; border-color: #00B900; color: #00B900; }
 
         .submit-btn { width: 100%; padding: 15px; background-color: #00B900; color: white; border: none; border-radius: 10px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 20px; transition: 0.3s; }
         .submit-btn:disabled { background-color: #cccccc; cursor: not-allowed; color: #666666; }
@@ -44,21 +45,23 @@
 
             <div class="form-group">
                 <label>2026年度のプロジェクトに参加しましたか？<span class="required">※必須</span></label>
-                <div class="radio-group">
+                <div class="choice-group" style="flex-direction: row;">
                     <input type="radio" id="partYes" name="project2026" value="はい" required>
-                    <label for="partYes" class="radio-label">はい</label>
+                    <label for="partYes" class="choice-label" style="flex: 1;">はい</label>
                     <input type="radio" id="partNo" name="project2026" value="いいえ" required>
-                    <label for="partNo" class="radio-label">いいえ</label>
+                    <label for="partNo" class="choice-label" style="flex: 1;">いいえ</label>
                 </div>
             </div>
 
            <div class="form-group">
-                <label>測定会（8/2）の希望時間<span class="required">※必須</span></label>
-                <select id="time" required>
-                    <option value="" disabled selected>選択してください</option>
-                    <option value="午前の部(9時～12時)">午前の部(9時～12時)</option>
-                    <option value="午後の部(13時～15時)">午後の部(13時～15時)</option>
-                </select>
+                <label>測定会（8/2）の希望時間（複数選択可）<span class="required">※必須</span></label>
+                <div class="choice-group">
+                    <input type="checkbox" id="timeAM" name="hopeTime" value="午前の部(9時～12時)">
+                    <label for="timeAM" class="choice-label">午前の部 (9時～12時)</label>
+                    
+                    <input type="checkbox" id="timePM" name="hopeTime" value="午後の部(13時～15時)">
+                    <label for="timePM" class="choice-label">午後の部 (13時～15時)</label>
+                </div>
             </div>
 
             <button type="submit" id="submitBtn" class="submit-btn" disabled>LINE情報を読み込み中...</button>
@@ -72,7 +75,6 @@
     </div>
 
     <script>
-        // ★ 歩数記録と同じ、最新の正しいGAS URLに変更しました
         const GAS_URL = "https://script.google.com/macros/s/AKfycbxrxgT6OwQa5WNKiOIzY36dWUhskOX6Q6drJvvXiJwJuG_zlHwswpvhg4CIG6Hu-Mnqvw/exec";
         let userId = "";
 
@@ -95,6 +97,15 @@
         document.getElementById('firstCheckForm').addEventListener('submit', function(event) {
             event.preventDefault(); 
 
+            // 希望時間のチェックボックスを取得
+            const checkedTimes = Array.from(document.querySelectorAll('input[name="hopeTime"]:checked')).map(el => el.value);
+            
+            // 1つも選ばれていない場合のバリデーション
+            if (checkedTimes.length === 0) {
+                alert("希望時間を1つ以上選択してください。");
+                return;
+            }
+
             if (!userId) {
                 alert("LINE IDを取得できていません。画面を一度閉じて、開き直してください。");
                 return;
@@ -107,13 +118,12 @@
             const formData = {
                 name: document.getElementById('nameKanji').value,
                 dob: document.getElementById('dob').value,
-                time: document.getElementById('time').value,
+                time: checkedTimes.join('、'), // 複数選択を「、」で繋ぐ
                 participated: document.querySelector('input[name="project2026"]:checked').value
             };
 
             const data = { userId: userId, type: 'first_check', value: formData };
 
-            // ★ no-corsを外し、確実な通信を行う仕様にアップグレード
             fetch(GAS_URL, {
                 method: "POST",
                 body: JSON.stringify(data)
