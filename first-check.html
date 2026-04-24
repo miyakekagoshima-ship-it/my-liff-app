@@ -3,17 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>初回健康チェック・測定会希望</title>
+    <title>よか茶レ！ 初回測定会</title>
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <style>
         body { font-family: sans-serif; padding: 20px; background-color: #f9f9f9; color: #333; }
-        h2 { text-align: center; font-size: 20px; color: #2c3e50; }
+        h2 { text-align: center; font-size: 20px; color: #2c3e50; line-height: 1.4; }
         .form-group { margin-bottom: 20px; text-align: left; }
-        label { display: block; font-weight: bold; margin-bottom: 8px; font-size: 14px; }
+        label { display: block; font-weight: bold; margin-bottom: 8px; font-size: 14px; line-height: 1.4; }
         .required { color: red; font-size: 12px; margin-left: 5px; }
+        .note { font-size: 13px; color: #e65100; margin-bottom: 10px; font-weight: bold; } /* 所要時間用のスタイル */
         input[type="text"], input[type="date"], select { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 16px; background-color: #fff;}
         
-        /* 選択肢のデザイン（チェックボックスとラジオボタン共通） */
         .choice-group { display: flex; flex-direction: column; gap: 10px; }
         .choice-label { display: block; text-align: center; background-color: #f0f0f0; padding: 12px; border-radius: 5px; border: 1px solid #ccc; cursor: pointer; font-size: 16px; font-weight: bold; transition: 0.2s; }
         input[type="radio"], input[type="checkbox"] { display: none; }
@@ -29,7 +29,7 @@
 </head>
 <body>
 
-    <h2>測定会の参加希望アンケート</h2>
+    <h2>よか茶レ！ 初回測定会<br>参加希望アンケート</h2>
 
     <div id="form-wrapper">
         <form id="firstCheckForm">
@@ -44,7 +44,7 @@
             </div>
 
             <div class="form-group">
-                <label>2026年度のプロジェクトに参加しましたか？<span class="required">※必須</span></label>
+                <label>令和8年度 たるみず元気プロジェクト「健康チェック」　に参加しましたか？<span class="required">※必須</span></label>
                 <div class="choice-group" style="flex-direction: row;">
                     <input type="radio" id="partYes" name="project2026" value="はい" required>
                     <label for="partYes" class="choice-label" style="flex: 1;">はい</label>
@@ -54,7 +54,8 @@
             </div>
 
            <div class="form-group">
-                <label>測定会（8/2）の希望時間（複数選択可）<span class="required">※必須</span></label>
+                <label>初回測定会（8/2）の希望時間（複数選択可）<span class="required">※必須</span></label>
+                <div class="note">※測定の所要時間は1時間程度を予定しております。</div>
                 <div class="choice-group">
                     <input type="checkbox" id="timeAM" name="hopeTime" value="午前の部(9時～12時)">
                     <label for="timeAM" class="choice-label">午前の部 (9時～12時)</label>
@@ -97,10 +98,8 @@
         document.getElementById('firstCheckForm').addEventListener('submit', function(event) {
             event.preventDefault(); 
 
-            // 希望時間のチェックボックスを取得
             const checkedTimes = Array.from(document.querySelectorAll('input[name="hopeTime"]:checked')).map(el => el.value);
             
-            // 1つも選ばれていない場合のバリデーション
             if (checkedTimes.length === 0) {
                 alert("希望時間を1つ以上選択してください。");
                 return;
@@ -118,7 +117,7 @@
             const formData = {
                 name: document.getElementById('nameKanji').value,
                 dob: document.getElementById('dob').value,
-                time: checkedTimes.join('、'), // 複数選択を「、」で繋ぐ
+                time: checkedTimes.join('、'),
                 participated: document.querySelector('input[name="project2026"]:checked').value
             };
 
@@ -135,7 +134,8 @@
                     submitBtn.disabled = false;
                     submitBtn.innerText = "送信する";
                 } else {
-                    let msgText = `📝 【測定会の参加希望】\n氏名：${formData.name}\n希望：${formData.time}\n2026年参加：${formData.participated}`;
+                    // ★ LINEのトークに流れるメッセージのタイトルも「よか茶レ！ 初回測定会」に統一しました
+                    let msgText = `📝 【よか茶レ！ 初回測定会】\n氏名：${formData.name}\n希望：${formData.time}\n令和8年度参加：${formData.participated}`;
                     
                     if (liff.isInClient()) {
                         liff.sendMessages([{ 'type': 'text', 'text': msgText }]).then(() => {
