@@ -3,95 +3,156 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>お茶の記録</title>
+    <title>初回健康チェック・測定会希望</title>
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <style>
-        body { font-family: sans-serif; text-align: center; padding: 20px; }
-        button { width: 80%; padding: 15px; margin: 10px; font-size: 18px; cursor: pointer; border-radius: 10px; border: 1px solid #ccc; }
-        .tea-btn { background-color: #eaffea; }
-        .completed-msg { color: #008000; font-size: 18px; font-weight: bold; padding: 20px; background-color: #f0fff0; border-radius: 10px; margin: 10px; border: 1px solid #008000; }
+        body { font-family: sans-serif; padding: 20px; background-color: #f9f9f9; color: #333; }
+        h2 { text-align: center; font-size: 20px; color: #2c3e50; }
+        .form-group { margin-bottom: 20px; text-align: left; }
+        label { display: block; font-weight: bold; margin-bottom: 8px; font-size: 14px; line-height: 1.4; }
+        .required { color: red; font-size: 12px; margin-left: 5px; }
+        input[type="text"], input[type="date"], select { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 16px; background-color: #fff;}
+        
+        /* 選択肢のデザイン（チェックボックスとラジオボタン共通） */
+        .choice-group { display: flex; flex-direction: column; gap: 10px; }
+        .choice-label { display: block; text-align: center; background-color: #f0f0f0; padding: 12px; border-radius: 5px; border: 1px solid #ccc; cursor: pointer; font-size: 16px; font-weight: bold; transition: 0.2s; }
+        input[type="radio"], input[type="checkbox"] { display: none; }
+        input[type="radio"]:checked + .choice-label, input[type="checkbox"]:checked + .choice-label { background-color: #eaffea; border-color: #00B900; color: #00B900; }
+
+        .submit-btn { width: 100%; padding: 15px; background-color: #00B900; color: white; border: none; border-radius: 10px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 20px; transition: 0.3s; }
+        .submit-btn:disabled { background-color: #cccccc; cursor: not-allowed; color: #666666; }
+        
+        #completed-msg { display: none; text-align: center; color: #008000; font-size: 18px; font-weight: bold; padding: 30px 20px; background-color: #f0fff0; border-radius: 10px; border: 1px solid #008000; margin-top: 20px; }
+        #form-wrapper { background-color: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .close-btn { width: 100%; padding: 15px; background-color: #666; color: white; border: none; border-radius: 10px; font-size: 16px; cursor: pointer; margin-top: 20px; }
     </style>
 </head>
 <body>
 
-    <h2>🍵 お茶の記録</h2>
-    <div id="tea-section">
-        <p>今日飲んだ本数を教えてください</p>
-        <button class="tea-btn" onclick="sendData(0)">0本</button>
-        <button class="tea-btn" onclick="sendData(1)">1本</button>
-        <button class="tea-btn" onclick="sendData(2)">2本</button>
+    <h2>測定会の参加希望アンケート</h2>
+
+    <div id="form-wrapper">
+        <form id="firstCheckForm">
+            <div class="form-group">
+                <label>氏名（漢字）<span class="required">※必須</span></label>
+                <input type="text" id="nameKanji" placeholder="例：山田 太郎" required>
+            </div>
+
+            <div class="form-group">
+                <label>生年月日<span class="required">※必須</span></label>
+                <input type="date" id="dob" required>
+            </div>
+
+            <div class="form-group">
+                <label>令和8年度 たるみず元気プロジェクト「健康チェック」　に参加しましたか？<span class="required">※必須</span></label>
+                <div class="choice-group" style="flex-direction: row;">
+                    <input type="radio" id="partYes" name="project2026" value="はい" required>
+                    <label for="partYes" class="choice-label" style="flex: 1;">はい</label>
+                    <input type="radio" id="partNo" name="project2026" value="いいえ" required>
+                    <label for="partNo" class="choice-label" style="flex: 1;">いいえ</label>
+                </div>
+            </div>
+
+           <div class="form-group">
+                <label>測定会（8/2）の希望時間（複数選択可）<span class="required">※必須</span></label>
+                <div class="choice-group">
+                    <input type="checkbox" id="timeAM" name="hopeTime" value="午前の部(9時～12時)">
+                    <label for="timeAM" class="choice-label">午前の部 (9時～12時)</label>
+                    
+                    <input type="checkbox" id="timePM" name="hopeTime" value="午後の部(13時～15時)">
+                    <label for="timePM" class="choice-label">午後の部 (13時～15時)</label>
+                </div>
+            </div>
+
+            <button type="submit" id="submitBtn" class="submit-btn" disabled>LINE情報を読み込み中...</button>
+        </form>
     </div>
 
-<script>
+    <div id="completed-msg">
+        ✅ 送信が完了しました。<br>ご協力ありがとうございます。
+        <br>
+        <button class="close-btn" onclick="liff.closeWindow()">画面を閉じる</button>
+    </div>
+
+    <script>
         const GAS_URL = "https://script.google.com/macros/s/AKfycbxrxgT6OwQa5WNKiOIzY36dWUhskOX6Q6drJvvXiJwJuG_zlHwswpvhg4CIG6Hu-Mnqvw/exec";
         let userId = "";
 
-        function getTodayString() {
-            const now = new Date();
-            return now.getFullYear() + "-" + (now.getMonth() + 1) + "-" + now.getDate();
-        }
-
-        function checkDailyLimit() {
-            if (localStorage.getItem('last_tea_date') === getTodayString()) {
-                document.getElementById('tea-section').innerHTML = '<div class="completed-msg">✅ 本日のお茶の記録は完了しています</div>';
-            }
-        }
-
-        // ▼【復活】画面が開いた時のチェック
-        document.addEventListener("DOMContentLoaded", checkDailyLimit);
-
- // 開始用のLIFF ID
-        liff.init({ liffId: "2009684447-p1k1lcRv" }) 
+        liff.init({ liffId: "2009684447-RrGH1PPx" }) 
             .then(() => {
                 if (!liff.isLoggedIn()) {
-                    liff.login();
+                    liff.login({ redirectUri: window.location.href });
                 } else {
                     liff.getProfile().then(profile => {
                         userId = profile.userId;
-                        document.getElementById('submitBtn').disabled = false;
-                        document.getElementById('submitBtn').innerText = "記録を送信する";
+                        const submitBtn = document.getElementById('submitBtn');
+                        submitBtn.disabled = false;
+                        submitBtn.innerText = "送信する";
                     }).catch(err => {
-                        // ★プロフィール取得失敗時のエラーを表示
-                        alert("LINE IDの取得に失敗しました: " + err);
+                        alert("LINE情報の取得に失敗しました。画面を開き直してください。");
                     });
                 }
-            }).catch(err => {
-                // ★LIFF初期化失敗時のエラーを表示
-                alert("LIFFの立ち上げに失敗しました: " + err);
-            });
+            }).catch(err => console.error(err));
 
-        function sendData(value) {
-            // ▼【復活】送信した瞬間に「今日の日付」を記憶させて画面を切り替える
-            localStorage.setItem('last_tea_date', getTodayString());
-            checkDailyLimit();
+        document.getElementById('firstCheckForm').addEventListener('submit', function(event) {
+            event.preventDefault(); 
 
-            const submitBtn = document.querySelectorAll('.tea-btn');
-            submitBtn.forEach(btn => btn.disabled = true);
-
-            const data = { userId: userId, type: 'tea', value: value };
+            const checkedTimes = Array.from(document.querySelectorAll('input[name="hopeTime"]:checked')).map(el => el.value);
             
+            if (checkedTimes.length === 0) {
+                alert("希望時間を1つ以上選択してください。");
+                return;
+            }
+
+            if (!userId) {
+                alert("LINE IDを取得できていません。画面を一度閉じて、開き直してください。");
+                return;
+            }
+
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.innerText = "送信中...";
+
+            const formData = {
+                name: document.getElementById('nameKanji').value,
+                dob: document.getElementById('dob').value,
+                time: checkedTimes.join('、'),
+                participated: document.querySelector('input[name="project2026"]:checked').value
+            };
+
+            const data = { userId: userId, type: 'first_check', value: formData };
+
             fetch(GAS_URL, {
                 method: "POST",
-                mode: "no-cors",
-                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(data)
-            }).then(() => {
-                let msgText = '🍵 【お茶の記録】\n本日（' + getTodayString() + '）：' + value + '杯 飲みました！';
-
-                if (liff.isInClient()) {
-                    liff.sendMessages([{ 'type': 'text', 'text': msgText }]).then(() => {
-                        document.getElementById('tea-section').innerHTML = '<div class="completed-msg">✅ 本日のお茶の記録は完了しています</div>';
-                    }).catch((err) => {
-                        document.getElementById('tea-section').innerHTML = '<div class="completed-msg">✅ 本日のお茶の記録は完了しています</div>';
-                    });
+            })
+            .then(response => response.json())
+            .then(res => {
+                if (res.error) {
+                    alert("エラーが発生しました:\n" + res.error);
+                    submitBtn.disabled = false;
+                    submitBtn.innerText = "送信する";
                 } else {
-                    document.getElementById('tea-section').innerHTML = '<div class="completed-msg">✅ 本日のお茶の記録は完了しています</div>';
+                    // ★LINEに送信するメッセージも「令和8年度」に統一しました
+                    let msgText = `📝 【測定会の参加希望】\n氏名：${formData.name}\n希望：${formData.time}\n令和8年度参加：${formData.participated}`;
+                    
+                    if (liff.isInClient()) {
+                        liff.sendMessages([{ 'type': 'text', 'text': msgText }]).then(() => {
+                            document.getElementById('form-wrapper').style.display = 'none';
+                            document.getElementById('completed-msg').style.display = 'block';
+                        }).catch(err => console.log(err));
+                    } else {
+                        document.getElementById('form-wrapper').style.display = 'none';
+                        document.getElementById('completed-msg').style.display = 'block';
+                    }
                 }
-            }).catch(err => {
-                alert("エラーが発生しました: " + err);
-                submitBtn.forEach(btn => btn.disabled = false);
+            })
+            .catch(err => {
+                alert("送信エラー: " + err.message);
+                submitBtn.disabled = false;
+                submitBtn.innerText = "送信する";
             });
-        }
+        });
     </script>
 </body>
 </html>
