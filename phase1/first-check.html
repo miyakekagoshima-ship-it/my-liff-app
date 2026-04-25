@@ -9,7 +9,7 @@
         body { font-family: sans-serif; padding: 20px; background-color: #f9f9f9; color: #333; }
         h2 { text-align: center; font-size: 20px; color: #2c3e50; line-height: 1.4; }
         .form-group { margin-bottom: 20px; text-align: left; }
-        label { display: block; font-weight: bold; margin-bottom: 8px; font-size: 14px; line-height: 1.4; }
+        label { display: block; font-weight: bold; margin-bottom: 8px; font-size: 14px; }
         .required { color: red; font-size: 12px; margin-left: 5px; }
         .note { font-size: 13px; color: #e65100; margin-bottom: 10px; font-weight: bold; } 
         input[type="text"], input[type="date"], select { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 16px; background-color: #fff;}
@@ -17,89 +17,59 @@
         .choice-label { display: block; text-align: center; background-color: #f0f0f0; padding: 12px; border-radius: 5px; border: 1px solid #ccc; cursor: pointer; font-size: 16px; font-weight: bold; transition: 0.2s; }
         input[type="radio"], input[type="checkbox"] { display: none; }
         input[type="radio"]:checked + .choice-label, input[type="checkbox"]:checked + .choice-label { background-color: #eaffea; border-color: #00B900; color: #00B900; }
-        .submit-btn { width: 100%; padding: 15px; background-color: #00B900; color: white; border: none; border-radius: 10px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 20px; transition: 0.3s; }
-        .submit-btn:disabled { background-color: #cccccc; cursor: not-allowed; color: #666666; }
+        .submit-btn { width: 100%; padding: 15px; background-color: #00B900; color: white; border: none; border-radius: 10px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 20px; }
         #completed-msg { display: none; text-align: center; color: #008000; font-size: 18px; font-weight: bold; padding: 30px 20px; background-color: #f0fff0; border-radius: 10px; border: 1px solid #008000; margin-top: 20px; }
         #form-wrapper { background-color: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .close-btn { width: 100%; padding: 15px; background-color: #666; color: white; border: none; border-radius: 10px; font-size: 16px; cursor: pointer; margin-top: 20px; }
+        .close-btn { width: 100%; padding: 15px; background-color: #666; color: white; border: none; border-radius: 10px; font-size: 16px; margin-top: 20px; }
     </style>
 </head>
 <body>
-    <h2>よか茶レ！ 初回測定会<br>参加希望アンケート</h2>
+    <h2>よか茶レ！ 初回測定会</h2>
     <div id="form-wrapper">
         <form id="firstCheckForm">
+            <div class="form-group"><label>氏名（漢字）<span class="required">※必須</span></label><input type="text" id="nameKanji" placeholder="例：山田 太郎" required></div>
+            <div class="form-group"><label>生年月日<span class="required">※必須</span></label><input type="date" id="dob" required></div>
             <div class="form-group">
-                <label>氏名（漢字）<span class="required">※必須</span></label>
-                <input type="text" id="nameKanji" placeholder="例：山田 太郎" required>
-            </div>
-            <div class="form-group">
-                <label>生年月日<span class="required">※必須</span></label>
-                <input type="date" id="dob" required>
-            </div>
-            <div class="form-group">
-                <label>令和8年度 たるみず元気プロジェクト「健康チェック」　に参加しましたか？<span class="required">※必須</span></label>
+                <label>R8 たるみず元気プロジェクト参加：<span class="required">※必須</span></label>
                 <div class="choice-group" style="flex-direction: row;">
-                    <input type="radio" id="partYes" name="project2026" value="はい" required>
-                    <label for="partYes" class="choice-label" style="flex: 1;">はい</label>
-                    <input type="radio" id="partNo" name="project2026" value="いいえ" required>
-                    <label for="partNo" class="choice-label" style="flex: 1;">いいえ</label>
+                    <input type="radio" id="partYes" name="project2026" value="はい" required><label for="partYes" class="choice-label" style="flex: 1;">はい</label>
+                    <input type="radio" id="partNo" name="project2026" value="いいえ" required><label for="partNo" class="choice-label" style="flex: 1;">いいえ</label>
                 </div>
             </div>
-           <div class="form-group">
-                <label>初回測定会（8/2）の希望時間（複数選択可）<span class="required">※必須</span></label>
+            <div class="form-group">
+                <label>初回測定会（8/2）の希望時間<span class="required">※必須</span></label>
                 <div class="note">※測定の所要時間は1時間程度を予定しております。</div>
                 <div class="choice-group">
-                    <input type="checkbox" id="timeAM" name="hopeTime" value="午前の部(9時～12時)">
-                    <label for="timeAM" class="choice-label">午前の部 (9時～12時)</label>
-                    <input type="checkbox" id="timePM" name="hopeTime" value="午後の部(13時～15時)">
-                    <label for="timePM" class="choice-label">午後の部 (13時～15時)</label>
+                    <input type="checkbox" id="timeAM" name="hopeTime" value="午前の部(9時～12時)"><label for="timeAM" class="choice-label">午前の部 (9時～12時)</label>
+                    <input type="checkbox" id="timePM" name="hopeTime" value="午後の部(13時～15時)"><label for="timePM" class="choice-label">午後の部 (13時～15時)</label>
                 </div>
             </div>
             <button type="submit" id="submitBtn" class="submit-btn" disabled>読み込み中...</button>
         </form>
     </div>
-    <div id="completed-msg">
-        ✅ 送信が完了しました。<br>ご協力ありがとうございます。<br>
-        <button class="close-btn" onclick="liff.closeWindow()">画面を閉じる</button>
-    </div>
+    <div id="completed-msg">✅ 送信が完了しました。<br><button class="close-btn" onclick="liff.closeWindow()">画面を閉じる</button></div>
     <script>
         const GAS_URL = "https://script.google.com/macros/s/AKfycbw-1n6QIM_g4ymsnsZsI-zPJEREJI8wFINnp9j3bd1BHrUTh43p9pSct5tA4hMbd4GU/exec";
-        let userId = "";
         liff.init({ liffId: "2009895376-Hh47tNgX" }).then(() => {
             if (!liff.isLoggedIn()) { liff.login(); } else {
-                liff.getProfile().then(profile => {
-                    userId = profile.userId;
-                    document.getElementById('submitBtn').disabled = false;
-                    document.getElementById('submitBtn').innerText = "送信する";
-                });
+                liff.getProfile().then(p => { userId = p.userId; document.getElementById('submitBtn').disabled = false; document.getElementById('submitBtn').innerText = "送信する"; });
             }
         });
-        document.getElementById('firstCheckForm').addEventListener('submit', function(event) {
-            event.preventDefault(); 
-            const checkedTimes = Array.from(document.querySelectorAll('input[name="hopeTime"]:checked')).map(el => el.value);
-            if (checkedTimes.length === 0) { alert("希望時間を1つ以上選択してください。"); return; }
-            const submitBtn = document.getElementById('submitBtn');
-            submitBtn.disabled = true;
-            submitBtn.innerText = "送信中...";
+        document.getElementById('firstCheckForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const times = Array.from(document.querySelectorAll('input[name="hopeTime"]:checked')).map(el => el.value);
+            if (times.length === 0) { alert("希望時間を選択してください"); return; }
             const formData = {
                 name: document.getElementById('nameKanji').value,
                 dob: document.getElementById('dob').value,
-                time: checkedTimes.join('、'),
+                time: times.join('、'),
                 participated: document.querySelector('input[name="project2026"]:checked').value
             };
             fetch(GAS_URL, { method: "POST", body: JSON.stringify({ userId: userId, type: 'first_check', value: formData }) })
-            .then(response => response.json()).then(res => {
-                let msgText = `📝 【よか茶レ！ 初回測定会】\n氏名：${formData.name}\n希望：${formData.time}\nR8 たるみず元気プロジェクト参加：${formData.participated}`;
-                if (liff.isInClient()) {
-                    liff.sendMessages([{ 'type': 'text', 'text': msgText }]).then(() => {
-                        document.getElementById('form-wrapper').style.display = 'none';
-                        document.getElementById('completed-msg').style.display = 'block';
-                    });
-                } else {
-                    document.getElementById('form-wrapper').style.display = 'none';
-                    document.getElementById('completed-msg').style.display = 'block';
-                }
-            }).catch(err => { alert("送信エラー: " + err.message); submitBtn.disabled = false; });
+            .then(r => r.json()).then(() => {
+                let msg = `📝 【よか茶レ！ 初回測定会】\n氏名：${formData.name}\n希望：${formData.time}\nR8 たるみず元気プロジェクト参加：${formData.participated}`;
+                liff.sendMessages([{ 'type': 'text', 'text': msg }]).then(() => { document.getElementById('form-wrapper').style.display='none'; document.getElementById('completed-msg').style.display='block'; });
+            });
         });
     </script>
 </body>
