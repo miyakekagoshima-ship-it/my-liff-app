@@ -27,7 +27,7 @@
     </div>
     <script>
         const GAS_URL = "https://script.google.com/macros/s/AKfycbw-1n6QIM_g4ymsnsZsI-zPJEREJI8wFINnp9j3bd1BHrUTh43p9pSct5tA4hMbd4GU/exec";
-        liff.init({ liffId: "ここにお茶用のLIFF_IDを貼る" }).then(() => { if (liff.isLoggedIn()) { liff.getProfile().then(p => { userId = p.userId; document.getElementById('submitBtn').disabled = false; document.getElementById('submitBtn').innerText = "送信する"; }); } else { liff.login(); } });
+        liff.init({ liffId: "2009895376-eQWjoZ0Q" }).then(() => { if (liff.isLoggedIn()) { liff.getProfile().then(p => { userId = p.userId; document.getElementById('submitBtn').disabled = false; document.getElementById('submitBtn').innerText = "送信する"; }); } else { liff.login(); } });
         document.getElementById('teaForm').addEventListener('submit', function(e) {
             e.preventDefault(); const val = document.getElementById('teaRemaining').value;
             fetch(GAS_URL, { method: "POST", body: JSON.stringify({ userId: userId, type: 'weekly_record', value: [{ week: '第1週', date: '8/3-8/9', tea: val }] }) })
