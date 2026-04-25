@@ -35,7 +35,7 @@
         if (localStorage.getItem(storageKey) === 'true') { document.getElementById('form-wrapper').innerHTML = `<div class="completed-msg">すでに送信済みです。</div>`; }
         const container = document.getElementById('inputs-container');
         recordDates.forEach((date, i) => { container.innerHTML += `<div class="day-card"><h3>${date}</h3><div class="input-row"><span>🚶‍♂️ 歩数</span><div><input type="number" id="step-${i}" min="0" max="100000" required><span>歩</span></div></div></div>`; });
-        liff.init({ liffId: "2009684447-p1k1lcRv" }).then(() => { if (!liff.isLoggedIn()) { liff.login(); } else { liff.getProfile().then(p => { userId = p.userId; document.getElementById('submitBtn').disabled = false; document.getElementById('submitBtn').innerText = "送信する"; }); } });
+        liff.init({ liffId: "2009895376-lm1f53Xo" }).then(() => { if (!liff.isLoggedIn()) { liff.login(); } else { liff.getProfile().then(p => { userId = p.userId; document.getElementById('submitBtn').disabled = false; document.getElementById('submitBtn').innerText = "送信する"; }); } });
         document.getElementById('stepForm').addEventListener('submit', function(e) {
             e.preventDefault(); const btn = document.getElementById('submitBtn'); btn.disabled = true;
             let stepData = []; let msgText = `📅 【${periodName}の歩数】\n`;
