@@ -15,12 +15,15 @@
     </style>
 </head>
 <body>
-    <div class="header"><span class="period-title">第1週 (8/3〜8/9)</span></div>
+    <div class="header">
+        <span class="period-title">第1週 (8/3[月]〜8/6[木])</span>
+        <div style="margin-top:15px; font-size:15px; line-height:1.6;">袋に残っている<b>本数（0〜8本）</b>を教えてください。</div>
+    </div>
     <div id="form-wrapper">
         <form id="teaForm">
             <div class="input-card"><label style="display:block;margin-bottom:15px;color:#16a34a;font-weight:bold;">袋に残っている本数</label>
                 <select id="teaRemaining" required><option value="" disabled selected>選択してください</option>
-                <script>for(let i=0; i<=14; i++) { document.write(`<option value="${i}本">${i} 本</option>`); }</script></select>
+                <script>for(let i=0; i<=8; i++) { document.write(`<option value="${i}本">${i} 本</option>`); }</script></select>
             </div>
             <button type="submit" id="submitBtn" class="submit-btn" disabled>読み込み中...</button>
         </form>
@@ -30,7 +33,7 @@
         liff.init({ liffId: "2009895376-eQWjoZ0Q" }).then(() => { if (liff.isLoggedIn()) { liff.getProfile().then(p => { userId = p.userId; document.getElementById('submitBtn').disabled = false; document.getElementById('submitBtn').innerText = "送信する"; }); } else { liff.login(); } });
         document.getElementById('teaForm').addEventListener('submit', function(e) {
             e.preventDefault(); const val = document.getElementById('teaRemaining').value;
-            fetch(GAS_URL, { method: "POST", body: JSON.stringify({ userId: userId, type: 'weekly_record', value: [{ week: '第1週', date: '8/3-8/9', tea: val }] }) })
+            fetch(GAS_URL, { method: "POST", body: JSON.stringify({ userId: userId, type: 'weekly_record', value: [{ week: '第1週', date: '8/3-8/6', tea: val }] }) })
             .then(r => r.json()).then(() => { liff.sendMessages([{ 'type': 'text', 'text': `📅 【お茶の記録：第1週】\n袋の残数：${val}` }]).then(() => liff.closeWindow()); });
         });
     </script>
