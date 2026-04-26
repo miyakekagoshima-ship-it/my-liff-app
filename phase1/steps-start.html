@@ -8,31 +8,121 @@
     <style>
         body { font-family: sans-serif; padding: 15px; background-color: #f0f8ff; color: #333; }
         .header { text-align: center; margin-bottom: 25px; }
-        .period-title { font-size: 16px; color: #fff; background-color: #007BFF; padding: 5px 15px; border-radius: 20px; display: inline-block; font-weight: bold;}
-        .day-card { background: #fff; border: 1px solid #d0e3f5; border-radius: 12px; padding: 15px; margin-bottom: 12px; }
+        .period-title { font-size: 16px; color: #fff; background-color: #007BFF; padding: 5px 15px; border-radius: 20px; display: inline-block; margin-bottom: 15px; font-weight: bold;}
+        .desc { font-size: 14px; color: #d93025; background: #fff; padding: 15px; border-radius: 8px; border-left: 5px solid #d93025; text-align: left; margin-bottom: 20px; font-weight: bold; line-height: 1.5; box-shadow: 0 2px 4px rgba(0,0,0,0.05);}
+        .day-card { background: #fff; border: 1px solid #d0e3f5; border-radius: 12px; padding: 18px; margin-bottom: 15px; box-shadow: 0 3px 6px rgba(0,123,255,0.08); }
+        .day-card h3 { margin: 0 0 15px 0; font-size: 18px; color: #0056b3; border-bottom: 2px solid #f0f8ff; padding-bottom: 8px; }
         .input-row { display: flex; justify-content: space-between; align-items: center; }
-        input[type="number"] { padding: 10px; border: 2px solid #007BFF; border-radius: 8px; font-size: 18px; width: 90px; text-align: right; }
-        .submit-btn { width: 100%; padding: 18px; background-color: #007BFF; color: white; border: none; border-radius: 15px; font-size: 20px; font-weight: bold; }
-        .completed-msg { text-align: center; color: #0056b3; font-size: 18px; font-weight: bold; padding: 40px 20px; background-color: #e6f2ff; border-radius: 15px; }
+        .label-text { font-weight: bold; font-size: 16px; color: #444; }
+        /* 数字入力欄のデザインと幅 */
+        input[type="number"] { padding: 12px; border: 2px solid #007BFF; border-radius: 10px; font-size: 18px; width: 110px; text-align: right; font-weight: bold; background-color: #fff; color: #333; }
+        .unit { font-size: 16px; color: #666; margin-left: 5px; font-weight: bold;}
+        .submit-btn { width: 100%; padding: 18px; background-color: #007BFF; color: white; border: none; border-radius: 15px; font-size: 20px; font-weight: bold; cursor: pointer; margin-top: 15px; }
+        .submit-btn:disabled { background-color: #ccc; }
+        .completed-msg { text-align: center; color: #0056b3; font-size: 18px; font-weight: bold; padding: 40px 20px; background-color: #e6f2ff; border-radius: 15px; border: 2px solid #007BFF; margin-top: 20px; }
+        .close-btn { width: 100%; padding: 18px; background-color: #666; color: white; border: none; border-radius: 12px; font-size: 18px; margin-top: 25px; cursor: pointer; }
     </style>
 </head>
 <body>
-    <div class="header"><span class="period-title">【開始】歩数の記録</span></div>
-    <div id="form-wrapper">
-        <form id="stepForm"><div id="inputs-container"></div><button type="submit" id="submitBtn" class="submit-btn" disabled>読み込み中...</button></form>
+    <div class="header">
+        <span class="period-title">【開始】歩数の記録</span>
+        <div class="desc">連携アプリ [Mi Fitness] に表示されている数値を入力してください。</div>
     </div>
-    <div id="completed-msg" style="display:none;"><div class="completed-msg">✅ 送信が完了しました。</div><button style="width:100%;margin-top:20px;padding:15px;" onclick="liff.closeWindow()">閉じる</button></div>
+
+    <div id="form-wrapper">
+        <form id="stepForm">
+            <div id="inputs-container"></div>
+            <button type="submit" id="submitBtn" class="submit-btn" disabled>読み込み中...</button>
+        </form>
+    </div>
+
+    <div id="completed-msg-box" style="display: none;">
+        <div class="completed-msg">✅ 送信が完了しました。<br>ご協力ありがとうございました。</div>
+        <button class="close-btn" onclick="liff.closeWindow()">画面を閉じる</button>
+    </div>
+
     <script>
         const GAS_URL = "https://script.google.com/macros/s/AKfycbw-1n6QIM_g4ymsnsZsI-zPJEREJI8wFINnp9j3bd1BHrUTh43p9pSct5tA4hMbd4GU/exec";
-        const dates = ["8/3(月)", "8/4(火)", "8/5(水)", "8/6(木)", "8/7(金)", "8/8(土)", "8/9(日)"];
+        const periodName = "開始"; 
+        const recordDates = ["8/3(月)", "8/4(火)", "8/5(水)", "8/6(木)", "8/7(金)", "8/8(土)", "8/9(日)"];
+        let userId = "";
+
+        // ★ 重複送信ブロック（すでに送信済みならフォームを隠す）
+        const storageKey = `submitted_steps_${periodName}`;
+        if (localStorage.getItem(storageKey) === 'true') {
+            document.getElementById('form-wrapper').innerHTML = `
+                <div class="completed-msg">✅ 【${periodName}】の歩数記録は<br>すでに送信済みです。</div>
+                <button class="close-btn" onclick="liff.closeWindow()">画面を閉じる</button>
+            `;
+        }
+
         const container = document.getElementById('inputs-container');
-        dates.forEach((d, i) => { container.innerHTML += `<div class="day-card"><h3>${d}</h3><div class="input-row"><span>🚶‍♂️ 歩数</span><div><input type="number" id="step-${i}" required><span>歩</span></div></div></div>`; });
-        liff.init({ liffId: "2009895376-lm1f53Xo" }).then(() => { if (liff.isLoggedIn()) { liff.getProfile().then(p => { userId = p.userId; document.getElementById('submitBtn').disabled = false; document.getElementById('submitBtn').innerText = "送信する"; }); } else { liff.login(); } });
+        recordDates.forEach((date, i) => { 
+            container.innerHTML += `
+                <div class="day-card">
+                    <h3>${date}</h3>
+                    <div class="input-row">
+                        <span class="label-text">🚶‍♂️ 歩数</span>
+                        <div>
+                            <input type="number" id="step-${i}" placeholder="0" min="0" max="100000" oninput="this.value = this.value.replace(/[^0-9]/g, ''); if(this.value > 100000) this.value = 100000;" required>
+                            <span class="unit">歩</span>
+                        </div>
+                    </div>
+                </div>
+            `; 
+        });
+
+        liff.init({ liffId: "2009895376-lm1f53Xo" }).then(() => { 
+            if (!liff.isLoggedIn()) { 
+                liff.login(); 
+            } else { 
+                liff.getProfile().then(p => { 
+                    userId = p.userId; 
+                    document.getElementById('submitBtn').disabled = false; 
+                    document.getElementById('submitBtn').innerText = "送信する"; 
+                }); 
+            } 
+        });
+
         document.getElementById('stepForm').addEventListener('submit', function(e) {
-            e.preventDefault(); let stepData = []; let msg = `📅 【開始の歩数記録】\n`;
-            dates.forEach((d, i) => { let v = document.getElementById(`step-${i}`).value; stepData.push({ period:'開始', date:d, steps:v }); msg += `${d}：${v}歩\n`; });
+            e.preventDefault(); 
+            const btn = document.getElementById('submitBtn'); 
+            btn.disabled = true;
+            btn.innerText = "送信中...";
+
+            let stepData = []; 
+            let msgText = `📅 【${periodName}の歩数記録】\n`;
+            
+            recordDates.forEach((d, i) => { 
+                let v = document.getElementById(`step-${i}`).value || 0; 
+                stepData.push({ period: periodName, date: d, steps: v }); 
+                msgText += `${d}：🚶‍♂️ ${v}歩\n`; 
+            });
+
             fetch(GAS_URL, { method: "POST", body: JSON.stringify({ userId: userId, type: 'step_record', value: stepData }) })
-            .then(r => r.json()).then(() => { liff.sendMessages([{ 'type': 'text', 'text': msg }]).then(() => { document.getElementById('form-wrapper').style.display='none'; document.getElementById('completed-msg').style.display='block'; }); });
+            .then(r => r.json()).then(res => { 
+                if (res.error) {
+                    alert("送信エラー: " + res.error);
+                    btn.disabled = false;
+                    btn.innerText = "送信する";
+                } else {
+                    // ★ 送信完了の記憶をブラウザに保存
+                    localStorage.setItem(storageKey, 'true'); 
+                    if (liff.isInClient()) { 
+                        liff.sendMessages([{ 'type': 'text', 'text': msgText.trim() }]).then(() => { 
+                            document.getElementById('form-wrapper').style.display = 'none'; 
+                            document.getElementById('completed-msg-box').style.display = 'block'; 
+                        }); 
+                    } else { 
+                        document.getElementById('form-wrapper').style.display = 'none'; 
+                        document.getElementById('completed-msg-box').style.display = 'block'; 
+                    } 
+                }
+            }).catch(err => {
+                alert("通信エラー: " + err.message);
+                btn.disabled = false;
+                btn.innerText = "送信する";
+            });
         });
     </script>
 </body>
