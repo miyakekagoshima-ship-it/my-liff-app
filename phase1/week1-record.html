@@ -9,9 +9,12 @@
         body { font-family: sans-serif; padding: 15px; background-color: #f0fdf4; color: #333; }
         .header { text-align: center; margin-bottom: 25px; }
         .period-title { font-size: 18px; color: #fff; background-color: #16a34a; padding: 8px 20px; border-radius: 25px; display: inline-block; font-weight: bold;}
-        .input-card { background: #fff; border-radius: 15px; padding: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); text-align: center; }
-        select { width: 100%; padding: 15px; border: 2px solid #16a34a; border-radius: 12px; font-size: 20px; font-weight: bold; }
-        .submit-btn { width: 100%; padding: 18px; background-color: #16a34a; color: white; border: none; border-radius: 15px; font-size: 20px; font-weight: bold; margin-top: 25px; }
+        .input-card { background: #fff; border-radius: 15px; padding: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); text-align: center; margin-top: 20px;}
+        select { width: 100%; padding: 15px; border: 2px solid #16a34a; border-radius: 12px; font-size: 20px; font-weight: bold; text-align: center; }
+        .submit-btn { width: 100%; padding: 18px; background-color: #16a34a; color: white; border: none; border-radius: 15px; font-size: 20px; font-weight: bold; margin-top: 25px; cursor: pointer;}
+        .submit-btn:disabled { background-color: #ccc; }
+        .completed-msg { text-align: center; color: #15803d; font-size: 18px; font-weight: bold; padding: 40px 20px; background-color: #f0fdf4; border-radius: 15px; border: 2px solid #16a34a; margin-top: 20px; }
+        .close-btn { width: 100%; padding: 18px; background-color: #666; color: white; border: none; border-radius: 12px; font-size: 18px; margin-top: 25px; cursor: pointer;}
     </style>
 </head>
 <body>
@@ -28,13 +31,71 @@
             <button type="submit" id="submitBtn" class="submit-btn" disabled>読み込み中...</button>
         </form>
     </div>
+
+    <div id="completed-msg-box" style="display: none;">
+        <div class="completed-msg">✅ お茶の残数記録を送信しました。<br>ご協力ありがとうございました。</div>
+        <button class="close-btn" onclick="liff.closeWindow()">画面を閉じる</button>
+    </div>
+
     <script>
         const GAS_URL = "https://script.google.com/macros/s/AKfycbw-1n6QIM_g4ymsnsZsI-zPJEREJI8wFINnp9j3bd1BHrUTh43p9pSct5tA4hMbd4GU/exec";
-        liff.init({ liffId: "2009895376-eQWjoZ0Q" }).then(() => { if (liff.isLoggedIn()) { liff.getProfile().then(p => { userId = p.userId; document.getElementById('submitBtn').disabled = false; document.getElementById('submitBtn').innerText = "送信する"; }); } else { liff.login(); } });
+        const periodName = "第1週";
+        let userId = "";
+
+        // ★ 重複送信ブロック（すでに送信済みならフォームを隠す）
+        const storageKey = `submitted_tea_${periodName}`;
+        if (localStorage.getItem(storageKey) === 'true') {
+            document.getElementById('form-wrapper').innerHTML = `
+                <div class="completed-msg">✅ 【${periodName}】の記録は<br>すでに送信済みです。</div>
+                <button class="close-btn" onclick="liff.closeWindow()">画面を閉じる</button>
+            `;
+        }
+
+        liff.init({ liffId: "2009895376-eQWjoZ0Q" }).then(() => { 
+            if (liff.isLoggedIn()) { 
+                liff.getProfile().then(p => { 
+                    userId = p.userId; 
+                    document.getElementById('submitBtn').disabled = false; 
+                    document.getElementById('submitBtn').innerText = "送信する"; 
+                }); 
+            } else { 
+                liff.login(); 
+            } 
+        });
+
         document.getElementById('teaForm').addEventListener('submit', function(e) {
-            e.preventDefault(); const val = document.getElementById('teaRemaining').value;
-            fetch(GAS_URL, { method: "POST", body: JSON.stringify({ userId: userId, type: 'weekly_record', value: [{ week: '第1週', date: '8/3-8/6', tea: val }] }) })
-            .then(r => r.json()).then(() => { liff.sendMessages([{ 'type': 'text', 'text': `📅 【お茶の記録：第1週】\n袋の残数：${val}` }]).then(() => liff.closeWindow()); });
+            e.preventDefault(); 
+            const btn = document.getElementById('submitBtn');
+            const val = document.getElementById('teaRemaining').value;
+            
+            btn.disabled = true;
+            btn.innerText = "送信中...";
+
+            fetch(GAS_URL, { method: "POST", body: JSON.stringify({ userId: userId, type: 'weekly_record', value: [{ week: periodName, date: '8/3-8/6', tea: val }] }) })
+            .then(r => r.json()).then(res => { 
+                if (res.error) {
+                    alert("送信エラー: " + res.error);
+                    btn.disabled = false;
+                    btn.innerText = "送信する";
+                } else {
+                    // ★ 送信完了の記憶をブラウザに保存
+                    localStorage.setItem(storageKey, 'true');
+                    let msgText = `📅 【お茶の記録：${periodName}】\n袋の残数：${val}`;
+                    if (liff.isInClient()) {
+                        liff.sendMessages([{ 'type': 'text', 'text': msgText }]).then(() => {
+                            document.getElementById('form-wrapper').style.display = 'none';
+                            document.getElementById('completed-msg-box').style.display = 'block';
+                        });
+                    } else {
+                        document.getElementById('form-wrapper').style.display = 'none';
+                        document.getElementById('completed-msg-box').style.display = 'block';
+                    }
+                }
+            }).catch(err => {
+                alert("通信エラー: " + err.message);
+                btn.disabled = false;
+                btn.innerText = "送信する";
+            });
         });
     </script>
 </body>
