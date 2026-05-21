@@ -17,10 +17,14 @@
         .choice-label { display: block; text-align: center; background-color: #f0f0f0; padding: 12px; border-radius: 5px; border: 1px solid #ccc; cursor: pointer; font-size: 16px; font-weight: bold; transition: 0.2s; }
         input[type="radio"], input[type="checkbox"] { display: none; }
         input[type="radio"]:checked + .choice-label, input[type="checkbox"]:checked + .choice-label { background-color: #eaffea; border-color: #00B900; color: #00B900; }
-        .submit-btn { width: 100%; padding: 15px; background-color: #00B900; color: white; border: none; border-radius: 10px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 20px; }
+        
+        .submit-btn { width: 100%; padding: 15px; background-color: #00B900; color: white; border: none; border-radius: 10px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 20px; transition: 0.3s; }
+        /* ★ 送信中（無効化時）のボタンデザイン */
+        .submit-btn:disabled { background-color: #cccccc; cursor: not-allowed; color: #666666; }
+        
         #completed-msg { display: none; text-align: center; color: #008000; font-size: 18px; font-weight: bold; padding: 30px 20px; background-color: #f0fff0; border-radius: 10px; border: 1px solid #008000; margin-top: 20px; }
         #form-wrapper { background-color: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .close-btn { width: 100%; padding: 15px; background-color: #666; color: white; border: none; border-radius: 10px; font-size: 16px; margin-top: 20px; }
+        .close-btn { width: 100%; padding: 15px; background-color: #666; color: white; border: none; border-radius: 10px; font-size: 16px; cursor: pointer; margin-top: 20px; }
     </style>
 </head>
 <body>
@@ -47,28 +51,81 @@
             <button type="submit" id="submitBtn" class="submit-btn" disabled>読み込み中...</button>
         </form>
     </div>
-    <div id="completed-msg">✅ 送信が完了しました。<br><button class="close-btn" onclick="liff.closeWindow()">画面を閉じる</button></div>
+
+    <div id="completed-msg">
+        ✅ 送信が完了しました。<br>ご協力ありがとうございます。<br><br>
+        <div style="font-size: 14px; color: #444; line-height: 1.6; text-align: left; background-color: #fff; padding: 15px; border-radius: 8px; border: 1px solid #ccc;">
+            測定会の詳細な日時につきましては、1カ月前の<strong>7月2日（木）</strong>にこちらのLINEにて個別にご案内いたします。
+        </div>
+        <button class="close-btn" onclick="liff.closeWindow()">画面を閉じる</button>
+    </div>
+
     <script>
         const GAS_URL = "https://script.google.com/macros/s/AKfycbw-1n6QIM_g4ymsnsZsI-zPJEREJI8wFINnp9j3bd1BHrUTh43p9pSct5tA4hMbd4GU/exec";
+        let userId = "";
+
         liff.init({ liffId: "2009895376-Hh47tNgX" }).then(() => {
-            if (!liff.isLoggedIn()) { liff.login(); } else {
-                liff.getProfile().then(p => { userId = p.userId; document.getElementById('submitBtn').disabled = false; document.getElementById('submitBtn').innerText = "送信する"; });
+            if (!liff.isLoggedIn()) { 
+                liff.login({ redirectUri: window.location.href }); 
+            } else {
+                liff.getProfile().then(p => { 
+                    userId = p.userId; 
+                    document.getElementById('submitBtn').disabled = false; 
+                    document.getElementById('submitBtn').innerText = "送信する"; 
+                }).catch(err => {
+                    alert("LINE情報の取得に失敗しました。画面を開き直してください。");
+                });
             }
         });
+
         document.getElementById('firstCheckForm').addEventListener('submit', function(e) {
             e.preventDefault();
+            const submitBtn = document.getElementById('submitBtn');
             const times = Array.from(document.querySelectorAll('input[name="hopeTime"]:checked')).map(el => el.value);
-            if (times.length === 0) { alert("希望時間を選択してください"); return; }
+            
+            if (times.length === 0) { 
+                alert("希望時間を選択してください"); 
+                return; 
+            }
+
+            // ★ ここでボタンを無効化し、「送信中...」に変更して連打を防止します
+            submitBtn.disabled = true;
+            submitBtn.innerText = "送信中...";
+
             const formData = {
                 name: document.getElementById('nameKanji').value,
                 dob: document.getElementById('dob').value,
                 time: times.join('、'),
                 participated: document.querySelector('input[name="project2026"]:checked').value
             };
-            fetch(GAS_URL, { method: "POST", body: JSON.stringify({ userId: userId, type: 'first_check', value: formData }) })
-            .then(r => r.json()).then(() => {
-                let msg = `📝 【よか茶レ！ 初回測定会】\n氏名：${formData.name}\n希望：${formData.time}\nR8 たるみず元気プロジェクト参加：${formData.participated}`;
-                liff.sendMessages([{ 'type': 'text', 'text': msg }]).then(() => { document.getElementById('form-wrapper').style.display='none'; document.getElementById('completed-msg').style.display='block'; });
+
+            fetch(GAS_URL, { 
+                method: "POST", 
+                body: JSON.stringify({ userId: userId, type: 'first_check', value: formData }) 
+            })
+            .then(response => response.json())
+            .then(res => {
+                if(res.error) {
+                    alert("エラーが発生しました:\n" + res.error);
+                    submitBtn.disabled = false;
+                    submitBtn.innerText = "送信する";
+                } else {
+                    let msg = `📝 【よか茶レ！ 初回測定会】\n氏名：${formData.name}\n希望：${formData.time}\nR8 たるみず元気プロジェクト参加：${formData.participated}`;
+                    if (liff.isInClient()) {
+                        liff.sendMessages([{ 'type': 'text', 'text': msg }]).then(() => { 
+                            document.getElementById('form-wrapper').style.display='none'; 
+                            document.getElementById('completed-msg').style.display='block'; 
+                        }).catch(err => console.log(err));
+                    } else {
+                        document.getElementById('form-wrapper').style.display='none'; 
+                        document.getElementById('completed-msg').style.display='block'; 
+                    }
+                }
+            })
+            .catch(err => {
+                alert("送信エラー: " + err.message);
+                submitBtn.disabled = false;
+                submitBtn.innerText = "送信する";
             });
         });
     </script>
