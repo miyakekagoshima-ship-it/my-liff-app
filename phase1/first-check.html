@@ -19,7 +19,6 @@
         input[type="radio"]:checked + .choice-label, input[type="checkbox"]:checked + .choice-label { background-color: #eaffea; border-color: #00B900; color: #00B900; }
         
         .submit-btn { width: 100%; padding: 15px; background-color: #00B900; color: white; border: none; border-radius: 10px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 20px; transition: 0.3s; }
-        /* ★ 送信中（無効化時）のボタンデザイン */
         .submit-btn:disabled { background-color: #cccccc; cursor: not-allowed; color: #666666; }
         
         #completed-msg { display: none; text-align: center; color: #008000; font-size: 18px; font-weight: bold; padding: 30px 20px; background-color: #f0fff0; border-radius: 10px; border: 1px solid #008000; margin-top: 20px; }
@@ -41,7 +40,7 @@
                 </div>
             </div>
             <div class="form-group">
-                <label>初回測定会（8/2）の希望時間<span class="required">※必須</span></label>
+                <label>初回測定会（8/2）の希望時間（複数選択可）<span class="required">※必須</span></label>
                 <div class="note">※測定の所要時間は1時間程度を予定しております。</div>
                 <div class="choice-group">
                     <input type="checkbox" id="timeAM" name="hopeTime" value="午前の部(9時～12時)"><label for="timeAM" class="choice-label">午前の部 (9時～12時)</label>
@@ -88,7 +87,6 @@
                 return; 
             }
 
-            // ★ ここでボタンを無効化し、「送信中...」に変更して連打を防止します
             submitBtn.disabled = true;
             submitBtn.innerText = "送信中...";
 
