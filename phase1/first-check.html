@@ -18,6 +18,9 @@
         input[type="radio"], input[type="checkbox"] { display: none; }
         input[type="radio"]:checked + .choice-label, input[type="checkbox"]:checked + .choice-label { background-color: #eaffea; border-color: #00B900; color: #00B900; }
         
+        /* ★ 無効化（定員到達など）された選択肢のデザインを追加 */
+        input[type="checkbox"]:disabled + .choice-label { background-color: #e0e0e0; color: #999; cursor: not-allowed; border-color: #ccc; }
+
         .submit-btn { width: 100%; padding: 15px; background-color: #00B900; color: white; border: none; border-radius: 10px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 20px; transition: 0.3s; }
         .submit-btn:disabled { background-color: #cccccc; cursor: not-allowed; color: #666666; }
         
@@ -43,7 +46,7 @@
                 <label>初回測定会（8/2）の希望時間（複数選択可）<span class="required">※必須</span></label>
                 <div class="note">※測定の所要時間は1時間程度を予定しております。</div>
                 <div class="choice-group">
-                    <input type="checkbox" id="timeAM" name="hopeTime" value="午前の部(9時～12時)"><label for="timeAM" class="choice-label">午前の部 (9時～12時)</label>
+                    <input type="checkbox" id="timeAM" name="hopeTime" value="午前の部(9時～12時)" disabled><label for="timeAM" class="choice-label">午前の部 (9時～12時)<br><span style="font-size: 13px;">※定員に達しました</span></label>
                     <input type="checkbox" id="timePM" name="hopeTime" value="午後の部(13時～15時)"><label for="timePM" class="choice-label">午後の部 (13時～15時)</label>
                 </div>
             </div>
