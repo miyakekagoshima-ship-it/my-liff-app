@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>体操動画の記録</title>
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <style>
+        body { font-family: sans-serif; text-align: center; padding: 20px; background-color: #f9f9f9; color: #333;}
+        h2 { font-size: 20px; color: #2c3e50; margin-bottom: 15px; }
+        .warning-box { background-color: #fff3f3; border: 2px solid #ffcccc; color: #d93025; padding: 15px; border-radius: 10px; font-size: 14px; text-align: left; margin-bottom: 20px; line-height: 1.5; font-weight: bold;}
+        .warning-box span { font-size: 16px; margin-bottom: 5px; display: block; text-align: center;}
+        
+        button { width: 90%; padding: 15px; margin: 10px auto; font-size: 18px; cursor: pointer; border-radius: 10px; border: 1px solid #ccc; font-weight: bold;}
+        .video-btn { background-color: #eaf4ff; color: #0056b3; border-color: #b3d7ff;}
+        .finish-btn { background-color: #ffeaea; color: red; transition: 0.3s; margin-top: 15px;}
+        .finish-btn:disabled { background-color: #e0e0e0; color: #888; cursor: not-allowed; border: 1px solid #ccc; font-weight: normal;}
+        
+        #video-container { margin-top: 20px; display: none; background-color: #fff; padding: 15px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);}
+        #youtube-player { width: 100%; height: 250px; border: none; border-radius: 8px; }
+        .completed-msg { color: #008000; font-size: 18px; font-weight: bold; padding: 20px; background-color: #eaffea; border-radius: 10px; margin: 10px; border: 1px solid #00B900; }
+    </style>
+</head>
+<body>
+
+    <h2>🏃‍♂️ 体操動画を見る</h2>
+
+    <div class="warning-box">
+        <span>⚠️ 動画視聴に関するご注意</span>
+        ・早送りや動画のスキップを行うと、視聴が完了したと判定されません。<br><br>
+        ・YouTubeアプリを開いて視聴した場合も判定外となります。動画右下の「全画面（拡大）ボタン」を押して、この画面のままご視聴ください。
+    </div>
+
+    <div id="video-section">
+        <p style="font-weight: bold; color: #555;">実施する難易度を選んでください</p>
+        <button class="video-btn" onclick="showVideo('かんたん', 'QjmdV01-TqI')">初級（再生）</button>
+        <button class="video-btn" onclick="showVideo('ふつう', 'hKxXh1GrRjI')">中級（再生）</button>
+        <button class="video-btn" onclick="showVideo('むずかしい', 'qP3jtYbfUK0')">上級（再生）</button>
+    </div>
+
+    <div id="video-container">
+        <h3 id="video-title" style="color: #0056b3; margin-top: 0;"></h3>
+        <div id="youtube-player"></div>
+        <button id="finish-btn" class="finish-btn" onclick="finishVideo()" disabled>動画を最後まで見ると押せます</button>
+    </div>
+
+    <script>
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbx_dvHCMmzScTxeRPH3i09xaojiZa9W7Qrbiu7GvtZUWjJoo2rUZi70mTqsy0cxI4Rs/exec";
+        let userId = "";
+        let currentLevel = ""; 
+        let player;
+        let timeTracker; 
+        let maxTime = 0; 
+
+        function getTodayString() {
+            const now = new Date();
+            return now.getFullYear() + "-" + (now.getMonth() + 1) + "-" + now.getDate();
+        }
+
+        function checkDailyLimit() {
+            if (localStorage.getItem('last_video_date') === getTodayString()) {
+                document.querySelector('.warning-box').style.display = 'none';
+                document.getElementById('video-section').innerHTML = '<div class="completed-msg">✅ 本日の体操は完了しています<br>お疲れ様でした！</div><button style="width:90%;margin-top:20px;padding:15px;background-color:#666;color:#fff;border-radius:10px;border:none;" onclick="liff.closeWindow()">閉じる</button>';
+                document.getElementById('video-container').style.display = 'none';
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", checkDailyLimit);
+
+        let tag = document.createElement('script');
+        tag.src = "https://www.youtube.com/iframe_api";
+        let firstScriptTag = document.getElementsByTagName('script')[0];
+        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+        // ★ここに動画用の新しいLIFF IDを入れてください
+        liff.init({ liffId: '2010463622-AYjQ4N8P' }) 
+            .then(() => {
+                checkDailyLimit();
+                if (!liff.isLoggedIn()) {
+                    liff.login();
+                } else {
+                    liff.getProfile().then(profile => {
+                        userId = profile.userId;
+                    });
+                }
+            });
+
+        function sendData(level) {
+            const finishBtn = document.getElementById('finish-btn');
+            finishBtn.disabled = true;
+            finishBtn.innerText = "記録中...";
+            
+            if (player && typeof player.stopVideo === 'function') {
+                player.stopVideo(); 
+            }
+
+            const data = { userId: userId, type: 'video', value: level };
+
+            // ★ 新しい確実な通信システムにアップグレード済み
+            fetch(GAS_URL, {
+                method: "POST",
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(res => {
+                if(res.error) {
+                    alert("エラー: " + res.error);
+                    finishBtn.disabled = false;
+                    finishBtn.innerText = "体操おわった！（記録する）";
+                } else {
+                    localStorage.setItem('last_video_date', getTodayString());
+                    checkDailyLimit(); // 表示の切り替え
+                    
+                    let msgText = '🏃‍♂️ 【体操の記録】\n本日（' + getTodayString() + '）：体操を実施しました！\n（コース：' + level + '）';
+                    if (liff.isInClient()) {
+                        liff.sendMessages([{ 'type': 'text', 'text': msgText }]).catch(err => console.log(err));
+                    }
+                }
+            })
+            .catch(err => {
+                alert("通信エラー: " + err.message);
+                finishBtn.disabled = false;
+                finishBtn.innerText = "体操おわった！（記録する）";
+            });
+        }
+
+        function showVideo(level, videoId) {
+            currentLevel = level;
+            document.getElementById('video-title').innerText = level + "コース";
+            
+            const finishBtn = document.getElementById('finish-btn');
+            finishBtn.disabled = true;
+            finishBtn.innerText = "動画を最後まで見ると押せます";
+            document.getElementById('video-container').style.display = 'block';
+            
+            maxTime = 0;
+            if (timeTracker) clearInterval(timeTracker);
+
+            if (player) {
+                player.loadVideoById(videoId);
+            } else {
+                player = new YT.Player('youtube-player', {
+                    height: '250',
+                    width: '100%',
+                    videoId: videoId,
+                    playerVars: { 
+                        'playsinline': 1, 
+                        'rel': 0,
+                        'disablekb': 1
+                    },
+                    events: { 'onStateChange': onPlayerStateChange }
+                });
+            }
+            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+        }
+
+        function onPlayerStateChange(event) {
+            if (event.data === YT.PlayerState.PLAYING) {
+                timeTracker = setInterval(function() {
+                    let currentTime = player.getCurrentTime();
+                    if (currentTime > maxTime + 2) {
+                        player.seekTo(maxTime); 
+                    } else {
+                        if (currentTime > maxTime) maxTime = currentTime;
+                    }
+                }, 1000);
+            } else {
+                clearInterval(timeTracker);
+            }
+
+            if (event.data === YT.PlayerState.ENDED) {
+                let duration = player.getDuration();
+                if (maxTime >= duration * 0.95) {
+                    const finishBtn = document.getElementById('finish-btn');
+                    finishBtn.disabled = false;
+                    finishBtn.innerText = "体操おわった！（記録する）";
+                } else {
+                    player.seekTo(maxTime);
+                    player.playVideo();
+                    alert("動画は飛ばさずに最後までご視聴ください🙇‍♂️");
+                }
+            }
+        }
+
+        function finishVideo() {
+            sendData(currentLevel); 
+        }
+    </script>
+</body>
+</html>
