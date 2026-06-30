@@ -33,9 +33,9 @@
 
     <div id="video-section">
         <p style="font-weight: bold; color: #555;">実施する難易度を選んでください</p>
-        <button class="video-btn" onclick="showVideo('かんたん', 'QjmdV01-TqI')">かんたん（再生）</button>
-        <button class="video-btn" onclick="showVideo('ふつう', 'hKxXh1GrRjI')">ふつう（再生）</button>
-        <button class="video-btn" onclick="showVideo('むずかしい', 'qP3jtYbfUK0')">むずかしい（再生）</button>
+        <button class="video-btn" onclick="showVideo('初級', 'SkZ2CzIUa3Y')">初級（再生）</button>
+        <button class="video-btn" onclick="showVideo('中級', 'hKxXh1GrRjI')">中級（再生）</button>
+        <button class="video-btn" onclick="showVideo('上級', 'qP3jtYbfUK0')">上級（再生）</button>
     </div>
 
     <div id="video-container">
@@ -72,7 +72,6 @@
         let firstScriptTag = document.getElementsByTagName('script')[0];
         firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
-        // ★ここに動画用の新しいLIFF IDを入れてください
         liff.init({ liffId: '2009895376-YdjBVL2k' }) 
             .then(() => {
                 checkDailyLimit();
@@ -96,7 +95,6 @@
 
             const data = { userId: userId, type: 'video', value: level };
 
-            // ★ 新しい確実な通信システムにアップグレード済み
             fetch(GAS_URL, {
                 method: "POST",
                 body: JSON.stringify(data)
