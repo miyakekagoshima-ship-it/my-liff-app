@@ -37,7 +37,11 @@
     </div>
 
     <div id="completed-msg-box" style="display: none;">
-        <div class="completed-msg">✅ 送信が完了しました。<br>ご協力ありがとうございました。</div>
+        <div class="completed-msg">
+            ✅ 送信が完了しました。<br>
+            <span style="font-size: 14px; font-weight: normal; display: block; margin-top: 10px;">（記録期間：8/3(月)〜8/9(日)）</span>
+            <br>ご協力ありがとうございました。
+        </div>
         <button class="close-btn" onclick="liff.closeWindow()">画面を閉じる</button>
     </div>
 
@@ -51,7 +55,10 @@
         const storageKey = `submitted_steps_${periodName}`;
         if (localStorage.getItem(storageKey) === 'true') {
             document.getElementById('form-wrapper').innerHTML = `
-                <div class="completed-msg">✅ 【${periodName}】の歩数記録は<br>すでに送信済みです。</div>
+                <div class="completed-msg">
+                    ✅ 【${periodName}】の歩数記録は<br>すでに送信済みです。<br>
+                    <span style="font-size: 14px; font-weight: normal; display: block; margin-top: 10px;">（記録期間：8/3(月)〜8/9(日)）</span>
+                </div>
                 <button class="close-btn" onclick="liff.closeWindow()">画面を閉じる</button>
             `;
         }
