@@ -24,7 +24,7 @@
 </head>
 <body>
     <div class="header">
-        <span class="period-title">【初期】歩数の記録（テスト用制限解除中）</span>
+        <span class="period-title">【初期】歩数の記録</span>
         <div class="desc">連携アプリ [Mi Fitness] に表示されている数値を入力してください。</div>
     </div>
 
@@ -50,8 +50,7 @@
         const recordDates = ["8/3(月)", "8/4(火)", "8/5(水)", "8/6(木)", "8/7(金)", "8/8(土)", "8/9(日)"];
         let userId = "";
 
-        // ★ テスト用に重複送信ブロック処理を一時的にコメントアウト（無効化）しています
-        /*
+        // ★ 重複送信ブロック処理を有効化
         const storageKey = `submitted_steps_${periodName}`;
         if (localStorage.getItem(storageKey) === 'true') {
             document.getElementById('form-wrapper').innerHTML = `
@@ -62,7 +61,6 @@
                 <button class="close-btn" onclick="liff.closeWindow()">画面を閉じる</button>
             `;
         }
-        */
 
         const container = document.getElementById('inputs-container');
         recordDates.forEach((date, i) => { 
@@ -114,8 +112,8 @@
                     btn.disabled = false;
                     btn.innerText = "送信する";
                 } else {
-                    // ★ 何度でもテストできるよう、完了ログのローカル保存も一時的にコメントアウトしています
-                    // localStorage.setItem(storageKey, 'true'); 
+                    // ★ 送信完了のログ保存を有効化
+                    localStorage.setItem(storageKey, 'true'); 
                     
                     if (liff.isInClient()) { 
                         liff.sendMessages([{ 'type': 'text', 'text': msgText.trim() }]).then(() => { 
