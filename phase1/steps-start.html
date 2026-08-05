@@ -9,14 +9,25 @@
         body { font-family: sans-serif; padding: 15px; background-color: #f0f8ff; color: #333; }
         .header { text-align: center; margin-bottom: 25px; }
         .period-title { font-size: 16px; color: #fff; background-color: #007BFF; padding: 5px 15px; border-radius: 20px; display: inline-block; margin-bottom: 15px; font-weight: bold;}
-        .desc { font-size: 14px; color: #d93025; background: #fff; padding: 15px; border-radius: 8px; border-left: 5px solid #d93025; text-align: left; margin-bottom: 20px; font-weight: bold; line-height: 1.5; box-shadow: 0 2px 4px rgba(0,0,0,0.05);}
+        .desc { font-size: 14px; color: #d93025; background: #fff; padding: 15px; border-radius: 8px; border-left: 5px solid #d93025; text-align: left; margin-bottom: 15px; font-weight: bold; line-height: 1.5; box-shadow: 0 2px 4px rgba(0,0,0,0.05);}
+        
+        /* ★ 0歩の指示用スタイル */
+        .info-box { background-color: #fff3f3; border: 2px solid #dc2626; color: #dc2626; padding: 12px; border-radius: 8px; font-size: 14px; text-align: center; margin-bottom: 20px; font-weight: bold; line-height: 1.5; }
+        
         .day-card { background: #fff; border: 1px solid #d0e3f5; border-radius: 12px; padding: 18px; margin-bottom: 15px; box-shadow: 0 3px 6px rgba(0,123,255,0.08); }
         .day-card h3 { margin: 0 0 15px 0; font-size: 18px; color: #0056b3; border-bottom: 2px solid #f0f8ff; padding-bottom: 8px; }
         .input-row { display: flex; justify-content: space-between; align-items: center; }
         .label-text { font-weight: bold; font-size: 16px; color: #444; }
         input[type="number"] { padding: 12px; border: 2px solid #007BFF; border-radius: 10px; font-size: 18px; width: 110px; text-align: right; font-weight: bold; background-color: #fff; color: #333; }
         .unit { font-size: 16px; color: #666; margin-left: 5px; font-weight: bold;}
-        .submit-btn { width: 100%; padding: 18px; background-color: #007BFF; color: white; border: none; border-radius: 15px; font-size: 20px; font-weight: bold; cursor: pointer; margin-top: 15px; }
+        
+        /* ★ 備考欄のスタイル */
+        .memo-card { background: #fff; border: 1px solid #ccc; border-radius: 12px; padding: 18px; margin-top: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .memo-label { display: block; font-weight: bold; font-size: 16px; color: #444; margin-bottom: 10px; }
+        .memo-note { font-size: 12px; color: #666; margin-bottom: 10px; display: block; }
+        textarea { width: 100%; padding: 12px; border: 2px solid #ccc; border-radius: 8px; font-size: 16px; box-sizing: border-box; resize: vertical; min-height: 80px; }
+
+        .submit-btn { width: 100%; padding: 18px; background-color: #007BFF; color: white; border: none; border-radius: 15px; font-size: 20px; font-weight: bold; cursor: pointer; margin-top: 25px; }
         .submit-btn:disabled { background-color: #ccc; }
         .completed-msg { text-align: center; color: #0056b3; font-size: 18px; font-weight: bold; padding: 40px 20px; background-color: #e6f2ff; border-radius: 15px; border: 2px solid #007BFF; margin-top: 20px; }
         .close-btn { width: 100%; padding: 18px; background-color: #666; color: white; border: none; border-radius: 12px; font-size: 18px; margin-top: 25px; cursor: pointer; }
@@ -28,9 +39,22 @@
         <div class="desc">連携アプリ [Mi Fitness] に表示されている数値を入力してください。</div>
     </div>
 
+    <!-- ★ 「0」入力の指示を追加 -->
+    <div class="info-box">
+        ⚠️ 時計のつけ忘れ等で<br>歩数を記録できなかった日は<br>「0」と入力してください。
+    </div>
+
     <div id="form-wrapper">
         <form id="stepForm">
             <div id="inputs-container"></div>
+            
+            <!-- ★ 備考欄を追加 -->
+            <div class="memo-card">
+                <label class="memo-label" for="memoInput">📝 備考（任意）</label>
+                <span class="memo-note">※歩数が極端に少ない理由（体調不良など）や、何かお気づきの点があればご記入ください。</span>
+                <textarea id="memoInput" placeholder="入力例：水曜日は体調不良のため時計を外していました。"></textarea>
+            </div>
+
             <button type="submit" id="submitBtn" class="submit-btn" disabled>読み込み中...</button>
         </form>
     </div>
@@ -101,11 +125,21 @@
             let stepData = []; 
             let msgText = `📅 【${periodName}の歩数記録】\n`;
             
+            // ★ 備考欄の値を取得
+            let memoVal = document.getElementById('memoInput').value.trim();
+
             recordDates.forEach((d, i) => { 
-                let v = document.getElementById(`step-${i}`).value || 0; 
-                stepData.push({ period: periodName, date: d, steps: v }); 
+                let v = document.getElementById(`step-${i}`).value;
+                if (v === "") v = "0"; // 空欄の場合は念のため0を代入
+                
+                // ★ データ配列に memo を追加
+                stepData.push({ period: periodName, date: d, steps: v, memo: memoVal }); 
                 msgText += `${d}：🚶‍♂️ ${v}歩\n`; 
             });
+
+            if(memoVal) {
+                msgText += `\n📝備考：\n${memoVal}`;
+            }
 
             fetch(GAS_URL, { method: "POST", body: JSON.stringify({ userId: userId, type: 'step_record', value: stepData }) })
             .then(r => r.json()).then(res => { 
