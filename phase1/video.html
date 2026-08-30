@@ -19,9 +19,6 @@
         #video-container { margin-top: 20px; display: none; background-color: #fff; padding: 15px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);}
         #youtube-player { width: 100%; height: 250px; border: none; border-radius: 8px; }
         .completed-msg { color: #008000; font-size: 18px; font-weight: bold; padding: 20px; background-color: #eaffea; border-radius: 10px; margin: 10px; border: 1px solid #00B900; }
-        
-        /* ★ 待機メッセージ用のスタイル */
-        .waiting-msg { color: #0056b3; font-size: 18px; font-weight: bold; padding: 30px 20px; background-color: #e6f2ff; border-radius: 10px; border: 2px solid #007BFF; margin: 20px 0; line-height: 1.5; }
     </style>
 </head>
 <body>
@@ -34,19 +31,8 @@
         ・YouTubeアプリを開いて視聴した場合も判定外となります。動画右下の「全画面（拡大）ボタン」を押して、この画面のままご視聴ください。
     </div>
 
-    <!-- ★ ここから 待機画面の表示 ★ -->
-    <div id="waiting-section">
-        <div class="waiting-msg">
-            ⏳ 本日は体操実施期間ではありません<br><br>
-            <!-- ★ メッセージの内容を8/31に変更しました -->
-            <span style="font-size: 15px; font-weight: normal; color: #333;">体操動画は<br><strong style="font-size: 20px; color: #d93025;">8月31日（月）</strong><br>から視聴可能になります。<br>もうしばらくお待ちください。</span>
-        </div>
-        <button style="background-color: #666; color: #fff; border: none; margin-top: 20px;" onclick="liff.closeWindow()">画面を閉じる</button>
-    </div>
-    <!-- ★ ここまで ★ -->
-
-    <!-- ★ 本番用の動画選択セクション（現在は非表示に設定 `display: none;`） ★ -->
-    <div id="video-section" style="display: none;">
+    <!-- ★ 待機画面を削除し、本番用の動画選択セクションを表示 ★ -->
+    <div id="video-section">
         <p style="font-weight: bold; color: #555;">実施する難易度を選んでください</p>
         <button class="video-btn" onclick="showVideo('初級', 'MdXPpdbrpGE')">初級（再生）</button>
         <button class="video-btn" onclick="showVideo('中級', 'LN0uisdFH1o')">中級（再生）</button>
@@ -76,12 +62,8 @@
             if (localStorage.getItem('last_video_date') === getTodayString()) {
                 document.querySelector('.warning-box').style.display = 'none';
                 
-                // ★ もし本番中に完了画面を表示させる場合は、waiting-sectionではなくvideo-sectionを書き換えます
+                // ★ 完了画面の表示処理
                 document.getElementById('video-section').innerHTML = '<div class="completed-msg">✅ 本日の体操は完了しています<br>お疲れ様でした！</div><button style="width:90%;margin-top:20px;padding:15px;background-color:#666;color:#fff;border-radius:10px;border:none;" onclick="liff.closeWindow()">閉じる</button>';
-                
-                // ★ 待機中は完了画面も出さないように隠します
-                document.getElementById('waiting-section').style.display = 'none';
-                document.getElementById('video-section').style.display = 'block'; // 完了メッセージ表示のためブロック化
                 
                 document.getElementById('video-container').style.display = 'none';
             }
