@@ -10,12 +10,10 @@
         .header { text-align: center; margin-bottom: 20px; }
         .period-title { font-size: 18px; color: #fff; background-color: #16a34a; padding: 8px 20px; border-radius: 25px; display: inline-block; font-weight: bold;}
         
-        /* ★ 「飲んだ数ではない」ことを伝える警告ボックスを追加 */
         .attention-box { background-color: #fff3f3; border: 2px solid #dc2626; color: #dc2626; padding: 12px; border-radius: 10px; font-size: 15px; text-align: center; margin: 15px 0; font-weight: bold; line-height: 1.5; box-shadow: 0 2px 4px rgba(220,38,38,0.05); }
         
         .input-card { background: #fff; border-radius: 15px; padding: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); text-align: center; margin-top: 10px;}
         
-        /* ★ 入力欄のラベルも「残っている」を強調 */
         .input-label { display: block; margin-bottom: 15px; color: #16a34a; font-size: 18px; font-weight: bold; }
         .highlight-red { color: #dc2626; font-size: 22px; text-decoration: underline; font-weight: bold; }
         
@@ -23,12 +21,17 @@
         .submit-btn { width: 100%; padding: 18px; background-color: #16a34a; color: white; border: none; border-radius: 15px; font-size: 20px; font-weight: bold; margin-top: 25px; cursor: pointer;}
         .submit-btn:disabled { background-color: #ccc; }
         .completed-msg { text-align: center; color: #15803d; font-size: 18px; font-weight: bold; padding: 40px 20px; background-color: #f0fdf4; border-radius: 15px; border: 2px solid #16a34a; margin-top: 20px; }
+        
+        /* ★ 修正案内のスタイル */
+        .correction-note { margin-top: 15px; font-size: 14px; color: #444; line-height: 1.6; text-align: left; background: #fff; padding: 15px; border-radius: 8px; border: 1px solid #ccc; }
+
         .close-btn { width: 100%; padding: 18px; background-color: #666; color: white; border: none; border-radius: 12px; font-size: 18px; margin-top: 25px; cursor: pointer;}
     </style>
 </head>
 <body>
     <div class="header">
-        <span class="period-title">第1週 (8/10[月]〜8/16[日])</span>
+        <!-- ★ 日付を8/31～9/6に変更 -->
+        <span class="period-title">第1週 (8/31[月]〜9/6[日])</span>
     </div>
 
     <div class="attention-box">
@@ -56,6 +59,11 @@
             ⚠️ <strong>袋と残りのお茶の保管について</strong><br>
             入力が終わった週の袋は、1月の測定会の際に回収いたします。お茶が残っている場合も、未摂取の包みは袋から出さずに、そのまま袋の中で保管してください。
         </div>
+        <!-- ★ 送信完了画面への修正案内 -->
+        <div class="correction-note">
+            ⚠️ <strong>入力内容を修正したい場合</strong><br>
+            システム上、再入力はできません。修正がある場合は、お手数ですが「第〇週の残数を〇本に修正」と、直接このLINEのトーク画面にメッセージをお送りください。
+        </div>
         <button class="close-btn" onclick="liff.closeWindow()">画面を閉じる</button>
     </div>
 
@@ -64,9 +72,9 @@
         const periodName = "第1週";
         let userId = "";
 
-        // ★ テスト用に重複送信ブロック処理は一時的にコメントアウト（無効化）を継続しています
+        // ★ 重複送信ブロック処理を本番用に有効化
         const storageKey = `submitted_tea_${periodName}`;
-        /*
+        
         if (localStorage.getItem(storageKey) === 'true') {
             document.getElementById('form-wrapper').innerHTML = `
                 <div class="completed-msg">✅ 【${periodName}】の記録は<br>すでに送信済みです。</div>
@@ -74,10 +82,15 @@
                     ⚠️ <strong>袋の保管についてのお願い</strong><br>
                     入力が終わった週の袋は、1月の測定会の際に回収いたします。お茶が残っている場合も、未摂取の包みは袋から出さず、そのまま袋の中で保管してください。
                 </div>
+                <!-- ★ 送信済みロック画面への修正案内 -->
+                <div class="correction-note">
+                    ⚠️ <strong>入力内容を修正したい場合</strong><br>
+                    システム上、再入力はできません。修正がある場合は、お手数ですが「第〇週の残数を〇本に修正」と、直接このLINEのトーク画面にメッセージをお送りください。
+                </div>
                 <button class="close-btn" onclick="liff.closeWindow()">画面を閉じる</button>
             `;
         }
-        */
+        
 
         liff.init({ liffId: "2009895376-eQWjoZ0Q" }).then(() => { 
             if (liff.isLoggedIn()) { 
@@ -99,13 +112,17 @@
             btn.disabled = true;
             btn.innerText = "送信中...";
 
-            fetch(GAS_URL, { method: "POST", body: JSON.stringify({ userId: userId, type: 'weekly_record', value: [{ week: periodName, date: '8/10-8/16', tea: val }] }) })
+            // ★ 送信データの日付も 8/31-9/6 に変更
+            fetch(GAS_URL, { method: "POST", body: JSON.stringify({ userId: userId, type: 'weekly_record', value: [{ week: periodName, date: '8/31-9/6', tea: val }] }) })
             .then(r => r.json()).then(res => { 
                 if (res.error) {
                     alert("送信エラー: " + res.error);
                     btn.disabled = false;
                     btn.innerText = "送信する";
                 } else {
+                    // ★ 本番用に完了ログのローカル保存を有効化
+                    localStorage.setItem(storageKey, 'true');
+                    
                     let msgText = `📅 【お茶の記録：${periodName}】\n袋の残数：${val}`;
                     if (liff.isInClient()) {
                         liff.sendMessages([{ 'type': 'text', 'text': msgText }]).then(() => {
