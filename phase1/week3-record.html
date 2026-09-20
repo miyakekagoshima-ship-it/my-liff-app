@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第3週 お茶の記録</title>
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <style>
+        body { font-family: sans-serif; padding: 15px; background-color: #f0fdf4; color: #333; }
+        .header { text-align: center; margin-bottom: 20px; }
+        .period-title { font-size: 18px; color: #fff; background-color: #16a34a; padding: 8px 20px; border-radius: 25px; display: inline-block; font-weight: bold;}
+        
+        /* ★ 「飲んだ数ではない」ことを伝える警告ボックスを追加 */
+        .attention-box { background-color: #fff3f3; border: 2px solid #dc2626; color: #dc2626; padding: 12px; border-radius: 10px; font-size: 15px; text-align: center; margin: 15px 0; font-weight: bold; line-height: 1.5; box-shadow: 0 2px 4px rgba(220,38,38,0.05); }
+        
+        .input-card { background: #fff; border-radius: 15px; padding: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); text-align: center; margin-top: 10px;}
+        
+        /* ★ 入力欄のラベルも「残っている」を強調 */
+        .input-label { display: block; margin-bottom: 15px; color: #16a34a; font-size: 18px; font-weight: bold; }
+        .highlight-red { color: #dc2626; font-size: 22px; text-decoration: underline; font-weight: bold; }
+        
+        select { width: 100%; padding: 15px; border: 2px solid #16a34a; border-radius: 12px; font-size: 18px; font-weight: bold; text-align: center; background-color: #fff; }
+        .submit-btn { width: 100%; padding: 18px; background-color: #16a34a; color: white; border: none; border-radius: 15px; font-size: 20px; font-weight: bold; margin-top: 25px; cursor: pointer;}
+        .submit-btn:disabled { background-color: #ccc; }
+        .completed-msg { text-align: center; color: #15803d; font-size: 18px; font-weight: bold; padding: 40px 20px; background-color: #f0fdf4; border-radius: 15px; border: 2px solid #16a34a; margin-top: 20px; }
+        
+        /* ★ 修正案内のスタイル */
+        .correction-note { margin-top: 15px; font-size: 14px; color: #444; line-height: 1.6; text-align: left; background: #fff; padding: 15px; border-radius: 8px; border: 1px solid #ccc; }
+
+        .close-btn { width: 100%; padding: 18px; background-color: #666; color: white; border: none; border-radius: 12px; font-size: 18px; margin-top: 25px; cursor: pointer;}
+    </style>
+</head>
+<body>
+    <div class="header">
+        <!-- ★ 日付を第3週用に変更 -->
+        <span class="period-title">第3週 (9/14[月]〜9/20[日])</span>
+    </div>
+
+    <div class="attention-box">
+        ⚠️ 警告：飲んだ本数ではありません！<br>
+        「いま袋の中に残っている本数」を数えてください。
+    </div>
+
+    <div id="form-wrapper">
+        <form id="teaForm">
+            <div class="input-card">
+                <label class="input-label">袋に<span class="highlight-red">残っている</span>本数</label>
+                
+                <select id="teaRemaining" required>
+                    <option value="" disabled selected>👉 残っている本数を選択</option>
+                    <script>for(let i=0; i<=14; i++) { document.write(`<option value="${i}本">${i} 本</option>`); }</script>
+                </select>
+            </div>
+            <button type="submit" id="submitBtn" class="submit-btn" disabled>読み込み中...</button>
+        </form>
+    </div>
+
+    <div id="completed-msg-box" style="display: none;">
+        <div class="completed-msg">✅ お茶の残数記録を送信しました。<br>ご協力ありがとうございました。</div>
+        <div class="completed-msg" style="font-size: 14px; font-weight: normal; color: #444; text-align: left; padding: 15px; background: #fff; border-color: #ccc; margin-top: 15px; border-radius: 10px;">
+            ⚠️ <strong>袋と残りのお茶の保管について</strong><br>
+            入力が終わった週の袋は、1月の測定会の際に回収いたします。お茶が残っている場合も、未摂取の包みは袋から出さずに、そのまま袋の中で保管してください。
+        </div>
+        <!-- ★ 送信完了画面への修正案内 -->
+        <div class="correction-note">
+            ⚠️ <strong>入力内容を修正したい場合</strong><br>
+            システム上、再入力はできません。修正がある場合は、お手数ですが「第〇週の残数を〇本に修正」と、直接このLINEのトーク画面にメッセージをお送りください。
+        </div>
+        <button class="close-btn" onclick="liff.closeWindow()">画面を閉じる</button>
+    </div>
+
+    <script>
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbwhg4QRc5zgqbjIj_3hQ-V8SJ2kogOQdSze7RfLZgp6KIi0jgr7WngrIiSJasXiMc37/exec";
+        // ★ 期間名を第3週に変更
+        const periodName = "第3週";
+        let userId = "";
+
+        // ★ 重複送信ブロック処理を本番用に有効化
+        const storageKey = `submitted_tea_${periodName}`;
+        
+        if (localStorage.getItem(storageKey) === 'true') {
+            document.getElementById('form-wrapper').innerHTML = `
+                <div class="completed-msg">✅ 【${periodName}】の記録は<br>すでに送信済みです。</div>
+                <div style="margin-top:15px; font-size:14px; color: #444; line-height: 1.6; text-align: left; background: #fff; padding: 15px; border-radius: 12px; border: 1px solid #16a34a;">
+                    ⚠️ <strong>袋の保管についてのお願い</strong><br>
+                    入力が終わった週の袋は、1月の測定会の際に回収いたします。お茶が残っている場合も、未摂取の包みは袋から出さず、そのまま袋の中で保管してください。
+                </div>
+                <!-- ★ 送信済みロック画面への修正案内 -->
+                <div class="correction-note">
+                    ⚠️ <strong>入力内容を修正したい場合</strong><br>
+                    システム上、再入力はできません。修正がある場合は、お手数ですが「第〇週の残数を〇本に修正」と、直接このLINEのトーク画面にメッセージをお送りください。
+                </div>
+                <button class="close-btn" onclick="liff.closeWindow()">画面を閉じる</button>
+            `;
+        }
+
+        // ★ 第3週用の新しいLIFF IDに変更してください
+        liff.init({ liffId: "2009895376-qZiNn85F" }).then(() => { 
+            if (liff.isLoggedIn()) { 
+                liff.getProfile().then(p => { 
+                    userId = p.userId; 
+                    document.getElementById('submitBtn').disabled = false; 
+                    document.getElementById('submitBtn').innerText = "送信する"; 
+                }); 
+            } else { 
+                liff.login(); 
+            } 
+        });
+
+        document.getElementById('teaForm').addEventListener('submit', function(e) {
+            e.preventDefault(); 
+            const btn = document.getElementById('submitBtn');
+            const val = document.getElementById('teaRemaining').value;
+            
+            btn.disabled = true;
+            btn.innerText = "送信中...";
+
+            // ★ 送信データの日付を第3週用に変更
+            fetch(GAS_URL, { method: "POST", body: JSON.stringify({ userId: userId, type: 'weekly_record', value: [{ week: periodName, date: '9/14-9/20', tea: val }] }) })
+            .then(r => r.json()).then(res => { 
+                if (res.error) {
+                    alert("送信エラー: " + res.error);
+                    btn.disabled = false;
+                    btn.innerText = "送信する";
+                } else {
+                    // ★ 本番用に完了ログのローカル保存を有効化
+                    localStorage.setItem(storageKey, 'true');
+                    
+                    let msgText = `📅 【お茶の記録：${periodName}】\n袋の残数：${val}`;
+                    if (liff.isInClient()) {
+                        liff.sendMessages([{ 'type': 'text', 'text': msgText }]).then(() => {
+                            document.getElementById('form-wrapper').style.display = 'none';
+                            document.getElementById('completed-msg-box').style.display = 'block';
+                        });
+                    } else {
+                        document.getElementById('form-wrapper').style.display = 'none';
+                        document.getElementById('completed-msg-box').style.display = 'block';
+                    }
+                }
+            }).catch(err => {
+                alert("通信エラー: " + err.message);
+                btn.disabled = false;
+                btn.innerText = "送信する";
+            });
+        });
+    </script>
+</body>
+</html>
