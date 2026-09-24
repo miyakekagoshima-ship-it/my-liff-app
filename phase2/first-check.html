@@ -26,6 +26,9 @@
         #completed-msg { display: none; text-align: center; color: #008000; font-size: 18px; font-weight: bold; padding: 30px 20px; background-color: #f0fff0; border-radius: 10px; border: 1px solid #008000; margin-top: 20px; }
         #form-wrapper { background-color: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         .close-btn { width: 100%; padding: 15px; background-color: #666; color: white; border: none; border-radius: 10px; font-size: 16px; cursor: pointer; margin-top: 20px; }
+
+        /* ★ 追加：混雑案内のボックススタイル */
+        .crowd-warning { background-color: #fff3f3; border-left: 5px solid #d93025; padding: 12px; margin-bottom: 15px; font-size: 13.5px; color: #d93025; font-weight: bold; border-radius: 4px; line-height: 1.5; }
     </style>
 </head>
 <body>
@@ -49,9 +52,25 @@
             <div class="form-group">
                 <label>初回測定会（11/23）の希望時間（複数選択可）<span class="required">※必須</span></label>
                 <div class="note">※測定の所要時間は1時間程度を予定しております。</div>
+                
+                <!-- ★ 混雑予想と午後推奨のメッセージを追加 -->
+                <div class="crowd-warning">
+                    ⚠️ 午前の部は大変混雑が予想されます。<br>可能であれば、比較的スムーズにご案内できる【午後の部】の選択を推奨しております。
+                </div>
+
                 <div class="choice-group">
-                    <input type="checkbox" id="timeAM" name="hopeTime" value="午前の部(9時～12時)"><label for="timeAM" class="choice-label">午前の部 (9時～12時)</label>
-                    <input type="checkbox" id="timePM" name="hopeTime" value="午後の部(13時～15時)"><label for="timePM" class="choice-label">午後の部 (13時～15時)</label>
+                    <!-- ★ 選択肢のボタン内にも案内を追記 -->
+                    <input type="checkbox" id="timeAM" name="hopeTime" value="午前の部(9時～12時)">
+                    <label for="timeAM" class="choice-label">
+                        午前の部 (9時～12時)<br>
+                        <span style="font-size: 13px; font-weight: normal; color: #d93025;">※混雑予想</span>
+                    </label>
+                    
+                    <input type="checkbox" id="timePM" name="hopeTime" value="午後の部(13時～15時)">
+                    <label for="timePM" class="choice-label">
+                        午後の部 (13時～15時)<br>
+                        <span style="font-size: 13px; color: #16a34a;">★おすすめ（比較的スムーズ）</span>
+                    </label>
                 </div>
             </div>
             <button type="submit" id="submitBtn" class="submit-btn" disabled>読み込み中...</button>
