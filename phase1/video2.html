@@ -15,7 +15,6 @@
         button { width: 90%; padding: 15px; margin: 10px auto; font-size: 18px; cursor: pointer; border-radius: 10px; border: 1px solid #ccc; font-weight: bold; transition: 0.2s;}
         .video-btn { background-color: #eaf4ff; color: #0056b3; border-color: #b3d7ff;}
         
-        /* ★ 選択中のボタンを目立たせるスタイル */
         .video-btn.active { background-color: #0056b3; color: white; border-color: #004085; }
 
         .finish-btn { background-color: #ffeaea; color: red; transition: 0.3s; margin-top: 15px;}
@@ -38,7 +37,6 @@
         ・動画右下の「全画面（拡大）ボタン」を押して、この画面のままご視聴ください。
     </div>
 
-    <!-- ★ 1回目のセクション ★ -->
     <div id="section-1" style="display: none;">
         <p class="section-title">【1回目】の実施</p>
         <p style="font-size: 14px; color: #666; margin-bottom: 15px;">実施する難易度を選んでください</p>
@@ -47,27 +45,24 @@
         <button id="btn-1-3" class="video-btn" onclick="showVideo('上級', '4VAUXghosII', 1, 'btn-1-3')">上級（再生）</button>
     </div>
 
-    <!-- ★ 1回目完了メッセージ（2回目への案内） ★ -->
     <div id="completed-1-msg" style="display: none; margin-bottom: 30px;">
         <div class="completed-msg">✅ 1回目の体操が完了しました！<br>お疲れ様でした。</div>
     </div>
 
-    <!-- ★ 2回目のセクション ★ -->
     <div id="section-2" style="display: none;">
-        <p class="section-title">【2回目】の実施（任意）</p>
+        <!-- ★ 「（任意）」を削除しました ★ -->
+        <p class="section-title">【2回目】の実施</p>
         <p style="font-size: 14px; color: #666; margin-bottom: 15px;">※2回目を実施する場合は選んでください</p>
         <button id="btn-2-1" class="video-btn" onclick="showVideo('初級', '6cFr8HxkL3s', 2, 'btn-2-1')">初級（再生）</button>
         <button id="btn-2-2" class="video-btn" onclick="showVideo('中級', 'mRxvAD_m2AU', 2, 'btn-2-2')">中級（再生）</button>
         <button id="btn-2-3" class="video-btn" onclick="showVideo('上級', '4VAUXghosII', 2, 'btn-2-3')">上級（再生）</button>
     </div>
 
-    <!-- ★ 2回目完了（本日の上限到達）メッセージ ★ -->
     <div id="completed-2-msg" style="display: none;">
         <div class="completed-msg">✅ 本日の体操は2回とも完了しています<br>素晴らしいですね！お疲れ様でした！</div>
         <button style="width:90%;margin-top:20px;padding:15px;background-color:#666;color:#fff;border-radius:10px;border:none;" onclick="liff.closeWindow()">閉じる</button>
     </div>
 
-    <!-- ★ 動画プレイヤー表示領域 ★ -->
     <div id="video-container">
         <h3 id="video-title" style="color: #0056b3; margin-top: 0;"></h3>
         <div id="youtube-player"></div>
@@ -89,12 +84,10 @@
             return now.getFullYear() + "-" + (now.getMonth() + 1) + "-" + now.getDate();
         }
 
-        // 今日の視聴回数をチェックして画面を切り替える
         function checkDailyLimit() {
             let recordDate = localStorage.getItem('video2_date');
             let playCount = localStorage.getItem('video2_count');
 
-            // 日付が変わっていたら回数をリセット
             if (recordDate !== getTodayString()) {
                 localStorage.setItem('video2_date', getTodayString());
                 localStorage.setItem('video2_count', '0');
@@ -103,7 +96,6 @@
                 playCount = parseInt(playCount, 10);
             }
 
-            // UIの初期化
             document.getElementById('section-1').style.display = 'none';
             document.getElementById('section-2').style.display = 'none';
             document.getElementById('completed-1-msg').style.display = 'none';
@@ -123,13 +115,11 @@
 
         document.addEventListener("DOMContentLoaded", checkDailyLimit);
 
-        // YouTube APIの読み込み
         let tag = document.createElement('script');
         tag.src = "https://www.youtube.com/iframe_api";
         let firstScriptTag = document.getElementsByTagName('script')[0];
         firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
-        // LIFF初期化
         liff.init({ liffId: '2009895376-17hQax0W' }) 
             .then(() => {
                 checkDailyLimit();
@@ -165,7 +155,6 @@
                     finishBtn.disabled = false;
                     finishBtn.innerText = "体操おわった！（記録する）";
                 } else {
-                    // ローカルの視聴回数を更新
                     let currentPlays = parseInt(localStorage.getItem('video2_count') || '0', 10);
                     localStorage.setItem('video2_count', currentPlays + 1);
                     
@@ -184,13 +173,11 @@
             });
         }
 
-        // ★修正点：セクションを隠さないようにし、ボタンの色を変えて動画を切り替える
         function showVideo(level, videoId, count, btnId) {
             currentLevel = level;
             currentCount = count;
             document.getElementById('video-title').innerText = `【${count}回目】 ${level}コース`;
             
-            // 全てのボタンから 'active' クラスを外し、押されたボタンだけ色を変える
             const allBtns = document.querySelectorAll('.video-btn');
             allBtns.forEach(btn => btn.classList.remove('active'));
             document.getElementById(btnId).classList.add('active');
@@ -221,7 +208,6 @@
             window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
         }
 
-        // 再生状況の監視
         function onPlayerStateChange(event) {
             if (event.data === YT.PlayerState.PLAYING) {
                 timeTracker = setInterval(function() {
