@@ -12,8 +12,12 @@
         .warning-box { background-color: #fff3f3; border: 2px solid #ffcccc; color: #d93025; padding: 15px; border-radius: 10px; font-size: 14px; text-align: left; margin-bottom: 20px; line-height: 1.5; font-weight: bold;}
         .warning-box span { font-size: 16px; margin-bottom: 5px; display: block; text-align: center;}
         
-        button { width: 90%; padding: 15px; margin: 10px auto; font-size: 18px; cursor: pointer; border-radius: 10px; border: 1px solid #ccc; font-weight: bold;}
+        button { width: 90%; padding: 15px; margin: 10px auto; font-size: 18px; cursor: pointer; border-radius: 10px; border: 1px solid #ccc; font-weight: bold; transition: 0.2s;}
         .video-btn { background-color: #eaf4ff; color: #0056b3; border-color: #b3d7ff;}
+        
+        /* ★ 選択中のボタンを目立たせるスタイル */
+        .video-btn.active { background-color: #0056b3; color: white; border-color: #004085; }
+
         .finish-btn { background-color: #ffeaea; color: red; transition: 0.3s; margin-top: 15px;}
         .finish-btn:disabled { background-color: #e0e0e0; color: #888; cursor: not-allowed; border: 1px solid #ccc; font-weight: normal;}
         
@@ -38,9 +42,9 @@
     <div id="section-1" style="display: none;">
         <p class="section-title">【1回目】の実施</p>
         <p style="font-size: 14px; color: #666; margin-bottom: 15px;">実施する難易度を選んでください</p>
-        <button class="video-btn" onclick="showVideo('初級', '6cFr8HxkL3s', 1)">初級（再生）</button>
-        <button class="video-btn" onclick="showVideo('中級', 'mRxvAD_m2AU', 1)">中級（再生）</button>
-        <button class="video-btn" onclick="showVideo('上級', '4VAUXghosII', 1)">上級（再生）</button>
+        <button id="btn-1-1" class="video-btn" onclick="showVideo('初級', '6cFr8HxkL3s', 1, 'btn-1-1')">初級（再生）</button>
+        <button id="btn-1-2" class="video-btn" onclick="showVideo('中級', 'mRxvAD_m2AU', 1, 'btn-1-2')">中級（再生）</button>
+        <button id="btn-1-3" class="video-btn" onclick="showVideo('上級', '4VAUXghosII', 1, 'btn-1-3')">上級（再生）</button>
     </div>
 
     <!-- ★ 1回目完了メッセージ（2回目への案内） ★ -->
@@ -52,9 +56,9 @@
     <div id="section-2" style="display: none;">
         <p class="section-title">【2回目】の実施（任意）</p>
         <p style="font-size: 14px; color: #666; margin-bottom: 15px;">※2回目を実施する場合は選んでください</p>
-        <button class="video-btn" onclick="showVideo('初級', '6cFr8HxkL3s', 2)">初級（再生）</button>
-        <button class="video-btn" onclick="showVideo('中級', 'mRxvAD_m2AU', 2)">中級（再生）</button>
-        <button class="video-btn" onclick="showVideo('上級', '4VAUXghosII', 2)">上級（再生）</button>
+        <button id="btn-2-1" class="video-btn" onclick="showVideo('初級', '6cFr8HxkL3s', 2, 'btn-2-1')">初級（再生）</button>
+        <button id="btn-2-2" class="video-btn" onclick="showVideo('中級', 'mRxvAD_m2AU', 2, 'btn-2-2')">中級（再生）</button>
+        <button id="btn-2-3" class="video-btn" onclick="showVideo('上級', '4VAUXghosII', 2, 'btn-2-3')">上級（再生）</button>
     </div>
 
     <!-- ★ 2回目完了（本日の上限到達）メッセージ ★ -->
@@ -75,7 +79,7 @@
         let userId = "";
         
         let currentLevel = ""; 
-        let currentCount = 1; // 1回目か2回目かを記憶
+        let currentCount = 1; 
         let player;
         let timeTracker; 
         let maxTime = 0; 
@@ -107,14 +111,11 @@
             document.getElementById('video-container').style.display = 'none';
 
             if (playCount === 0) {
-                // まだ1回も見ていない
                 document.getElementById('section-1').style.display = 'block';
             } else if (playCount === 1) {
-                // 1回見終わっている
                 document.getElementById('completed-1-msg').style.display = 'block';
                 document.getElementById('section-2').style.display = 'block';
             } else if (playCount >= 2) {
-                // 2回見終わっている（上限）
                 document.getElementById('warningBox').style.display = 'none';
                 document.getElementById('completed-2-msg').style.display = 'block';
             }
@@ -128,7 +129,7 @@
         let firstScriptTag = document.getElementsByTagName('script')[0];
         firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
-        // LIFF初期化（新しいIDをセット）
+        // LIFF初期化
         liff.init({ liffId: '2009895376-17hQax0W' }) 
             .then(() => {
                 checkDailyLimit();
@@ -141,7 +142,6 @@
                 }
             });
 
-        // データの送信処理
         function sendData() {
             const finishBtn = document.getElementById('finish-btn');
             finishBtn.disabled = true;
@@ -151,7 +151,6 @@
                 player.stopVideo(); 
             }
 
-            // 「初級（1回目）」のような文字列を作成
             const sendValue = `${currentLevel}（${currentCount}回目）`;
             const data = { userId: userId, type: 'video', value: sendValue };
 
@@ -170,7 +169,7 @@
                     let currentPlays = parseInt(localStorage.getItem('video2_count') || '0', 10);
                     localStorage.setItem('video2_count', currentPlays + 1);
                     
-                    checkDailyLimit(); // 画面を再描画（2回目のボタンを出す、等）
+                    checkDailyLimit(); 
                     
                     let msgText = `🏃‍♂️ 【体操の記録】\n本日（${getTodayString()}）：体操を実施しました！\n（コース：${sendValue}）`;
                     if (liff.isInClient()) {
@@ -185,16 +184,16 @@
             });
         }
 
-        // 動画を表示して再生準備
-        function showVideo(level, videoId, count) {
+        // ★修正点：セクションを隠さないようにし、ボタンの色を変えて動画を切り替える
+        function showVideo(level, videoId, count, btnId) {
             currentLevel = level;
             currentCount = count;
             document.getElementById('video-title').innerText = `【${count}回目】 ${level}コース`;
             
-            // 選択中のセクション以外を隠してスッキリさせる
-            document.getElementById('section-1').style.display = 'none';
-            document.getElementById('section-2').style.display = 'none';
-            document.getElementById('completed-1-msg').style.display = 'none';
+            // 全てのボタンから 'active' クラスを外し、押されたボタンだけ色を変える
+            const allBtns = document.querySelectorAll('.video-btn');
+            allBtns.forEach(btn => btn.classList.remove('active'));
+            document.getElementById(btnId).classList.add('active');
 
             const finishBtn = document.getElementById('finish-btn');
             finishBtn.disabled = true;
@@ -251,7 +250,6 @@
             }
         }
 
-        // 完了ボタンが押された時
         function finishVideo() {
             sendData(); 
         }
