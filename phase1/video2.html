@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>体操動画の記録（1日2回まで）</title>
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <style>
+        body { font-family: sans-serif; text-align: center; padding: 20px; background-color: #f9f9f9; color: #333;}
+        h2 { font-size: 20px; color: #2c3e50; margin-bottom: 15px; }
+        
+        .warning-box { background-color: #fff3f3; border: 2px solid #ffcccc; color: #d93025; padding: 15px; border-radius: 10px; font-size: 14px; text-align: left; margin-bottom: 20px; line-height: 1.5; font-weight: bold;}
+        .warning-box span { font-size: 16px; margin-bottom: 5px; display: block; text-align: center;}
+        
+        button { width: 90%; padding: 15px; margin: 10px auto; font-size: 18px; cursor: pointer; border-radius: 10px; border: 1px solid #ccc; font-weight: bold;}
+        .video-btn { background-color: #eaf4ff; color: #0056b3; border-color: #b3d7ff;}
+        .finish-btn { background-color: #ffeaea; color: red; transition: 0.3s; margin-top: 15px;}
+        .finish-btn:disabled { background-color: #e0e0e0; color: #888; cursor: not-allowed; border: 1px solid #ccc; font-weight: normal;}
+        
+        #video-container { margin-top: 20px; display: none; background-color: #fff; padding: 15px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);}
+        #youtube-player { width: 100%; height: 250px; border: none; border-radius: 8px; }
+        
+        .completed-msg { color: #008000; font-size: 18px; font-weight: bold; padding: 20px; background-color: #eaffea; border-radius: 10px; margin: 10px; border: 1px solid #00B900; }
+        .section-title { font-weight: bold; color: #555; margin-bottom: 10px; font-size: 18px; border-bottom: 2px solid #ccc; padding-bottom: 5px;}
+    </style>
+</head>
+<body>
+
+    <h2>🏃‍♂️ 体操動画を見る</h2>
+
+    <div class="warning-box" id="warningBox">
+        <span>⚠️ 動画視聴に関するご注意</span>
+        ・早送りや動画のスキップを行うと、視聴が完了したと判定されません。<br><br>
+        ・動画右下の「全画面（拡大）ボタン」を押して、この画面のままご視聴ください。
+    </div>
+
+    <!-- ★ 1回目のセクション ★ -->
+    <div id="section-1" style="display: none;">
+        <p class="section-title">【1回目】の実施</p>
+        <p style="font-size: 14px; color: #666; margin-bottom: 15px;">実施する難易度を選んでください</p>
+        <button class="video-btn" onclick="showVideo('初級', '6cFr8HxkL3s', 1)">初級（再生）</button>
+        <button class="video-btn" onclick="showVideo('中級', 'mRxvAD_m2AU', 1)">中級（再生）</button>
+        <button class="video-btn" onclick="showVideo('上級', '4VAUXghosII', 1)">上級（再生）</button>
+    </div>
+
+    <!-- ★ 1回目完了メッセージ（2回目への案内） ★ -->
+    <div id="completed-1-msg" style="display: none; margin-bottom: 30px;">
+        <div class="completed-msg">✅ 1回目の体操が完了しました！<br>お疲れ様でした。</div>
+    </div>
+
+    <!-- ★ 2回目のセクション ★ -->
+    <div id="section-2" style="display: none;">
+        <p class="section-title">【2回目】の実施（任意）</p>
+        <p style="font-size: 14px; color: #666; margin-bottom: 15px;">※2回目を実施する場合は選んでください</p>
+        <button class="video-btn" onclick="showVideo('初級', '6cFr8HxkL3s', 2)">初級（再生）</button>
+        <button class="video-btn" onclick="showVideo('中級', 'mRxvAD_m2AU', 2)">中級（再生）</button>
+        <button class="video-btn" onclick="showVideo('上級', '4VAUXghosII', 2)">上級（再生）</button>
+    </div>
+
+    <!-- ★ 2回目完了（本日の上限到達）メッセージ ★ -->
+    <div id="completed-2-msg" style="display: none;">
+        <div class="completed-msg">✅ 本日の体操は2回とも完了しています<br>素晴らしいですね！お疲れ様でした！</div>
+        <button style="width:90%;margin-top:20px;padding:15px;background-color:#666;color:#fff;border-radius:10px;border:none;" onclick="liff.closeWindow()">閉じる</button>
+    </div>
+
+    <!-- ★ 動画プレイヤー表示領域 ★ -->
+    <div id="video-container">
+        <h3 id="video-title" style="color: #0056b3; margin-top: 0;"></h3>
+        <div id="youtube-player"></div>
+        <button id="finish-btn" class="finish-btn" onclick="finishVideo()" disabled>動画を最後まで見ると押せます</button>
+    </div>
+
+    <script>
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbwhg4QRc5zgqbjIj_3hQ-V8SJ2kogOQdSze7RfLZgp6KIi0jgr7WngrIiSJasXiMc37/exec";
+        let userId = "";
+        
+        let currentLevel = ""; 
+        let currentCount = 1; // 1回目か2回目かを記憶
+        let player;
+        let timeTracker; 
+        let maxTime = 0; 
+
+        function getTodayString() {
+            const now = new Date();
+            return now.getFullYear() + "-" + (now.getMonth() + 1) + "-" + now.getDate();
+        }
+
+        // 今日の視聴回数をチェックして画面を切り替える
+        function checkDailyLimit() {
+            let recordDate = localStorage.getItem('video2_date');
+            let playCount = localStorage.getItem('video2_count');
+
+            // 日付が変わっていたら回数をリセット
+            if (recordDate !== getTodayString()) {
+                localStorage.setItem('video2_date', getTodayString());
+                localStorage.setItem('video2_count', '0');
+                playCount = 0;
+            } else {
+                playCount = parseInt(playCount, 10);
+            }
+
+            // UIの初期化
+            document.getElementById('section-1').style.display = 'none';
+            document.getElementById('section-2').style.display = 'none';
+            document.getElementById('completed-1-msg').style.display = 'none';
+            document.getElementById('completed-2-msg').style.display = 'none';
+            document.getElementById('video-container').style.display = 'none';
+
+            if (playCount === 0) {
+                // まだ1回も見ていない
+                document.getElementById('section-1').style.display = 'block';
+            } else if (playCount === 1) {
+                // 1回見終わっている
+                document.getElementById('completed-1-msg').style.display = 'block';
+                document.getElementById('section-2').style.display = 'block';
+            } else if (playCount >= 2) {
+                // 2回見終わっている（上限）
+                document.getElementById('warningBox').style.display = 'none';
+                document.getElementById('completed-2-msg').style.display = 'block';
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", checkDailyLimit);
+
+        // YouTube APIの読み込み
+        let tag = document.createElement('script');
+        tag.src = "https://www.youtube.com/iframe_api";
+        let firstScriptTag = document.getElementsByTagName('script')[0];
+        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+        // LIFF初期化（新しいIDをセット）
+        liff.init({ liffId: '2009895376-17hQax0W' }) 
+            .then(() => {
+                checkDailyLimit();
+                if (!liff.isLoggedIn()) {
+                    liff.login();
+                } else {
+                    liff.getProfile().then(profile => {
+                        userId = profile.userId;
+                    });
+                }
+            });
+
+        // データの送信処理
+        function sendData() {
+            const finishBtn = document.getElementById('finish-btn');
+            finishBtn.disabled = true;
+            finishBtn.innerText = "記録中...";
+            
+            if (player && typeof player.stopVideo === 'function') {
+                player.stopVideo(); 
+            }
+
+            // 「初級（1回目）」のような文字列を作成
+            const sendValue = `${currentLevel}（${currentCount}回目）`;
+            const data = { userId: userId, type: 'video', value: sendValue };
+
+            fetch(GAS_URL, {
+                method: "POST",
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(res => {
+                if(res.error) {
+                    alert("エラー: " + res.error);
+                    finishBtn.disabled = false;
+                    finishBtn.innerText = "体操おわった！（記録する）";
+                } else {
+                    // ローカルの視聴回数を更新
+                    let currentPlays = parseInt(localStorage.getItem('video2_count') || '0', 10);
+                    localStorage.setItem('video2_count', currentPlays + 1);
+                    
+                    checkDailyLimit(); // 画面を再描画（2回目のボタンを出す、等）
+                    
+                    let msgText = `🏃‍♂️ 【体操の記録】\n本日（${getTodayString()}）：体操を実施しました！\n（コース：${sendValue}）`;
+                    if (liff.isInClient()) {
+                        liff.sendMessages([{ 'type': 'text', 'text': msgText }]).catch(err => console.log(err));
+                    }
+                }
+            })
+            .catch(err => {
+                alert("通信エラー: " + err.message);
+                finishBtn.disabled = false;
+                finishBtn.innerText = "体操おわった！（記録する）";
+            });
+        }
+
+        // 動画を表示して再生準備
+        function showVideo(level, videoId, count) {
+            currentLevel = level;
+            currentCount = count;
+            document.getElementById('video-title').innerText = `【${count}回目】 ${level}コース`;
+            
+            // 選択中のセクション以外を隠してスッキリさせる
+            document.getElementById('section-1').style.display = 'none';
+            document.getElementById('section-2').style.display = 'none';
+            document.getElementById('completed-1-msg').style.display = 'none';
+
+            const finishBtn = document.getElementById('finish-btn');
+            finishBtn.disabled = true;
+            finishBtn.innerText = "動画を最後まで見ると押せます";
+            document.getElementById('video-container').style.display = 'block';
+            
+            maxTime = 0;
+            if (timeTracker) clearInterval(timeTracker);
+
+            if (player) {
+                player.loadVideoById(videoId);
+            } else {
+                player = new YT.Player('youtube-player', {
+                    height: '250',
+                    width: '100%',
+                    videoId: videoId,
+                    playerVars: { 
+                        'playsinline': 1, 
+                        'rel': 0,
+                        'disablekb': 1
+                    },
+                    events: { 'onStateChange': onPlayerStateChange }
+                });
+            }
+            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+        }
+
+        // 再生状況の監視
+        function onPlayerStateChange(event) {
+            if (event.data === YT.PlayerState.PLAYING) {
+                timeTracker = setInterval(function() {
+                    let currentTime = player.getCurrentTime();
+                    if (currentTime > maxTime + 2) {
+                        player.seekTo(maxTime); 
+                    } else {
+                        if (currentTime > maxTime) maxTime = currentTime;
+                    }
+                }, 1000);
+            } else {
+                clearInterval(timeTracker);
+            }
+
+            if (event.data === YT.PlayerState.ENDED) {
+                let duration = player.getDuration();
+                if (maxTime >= duration * 0.95) {
+                    const finishBtn = document.getElementById('finish-btn');
+                    finishBtn.disabled = false;
+                    finishBtn.innerText = "体操おわった！（記録する）";
+                } else {
+                    player.seekTo(maxTime);
+                    player.playVideo();
+                    alert("動画は飛ばさずに最後までご視聴ください🙇‍♂️");
+                }
+            }
+        }
+
+        // 完了ボタンが押された時
+        function finishVideo() {
+            sendData(); 
+        }
+    </script>
+</body>
+</html>
