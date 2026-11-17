@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>歩数の記録</title>
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <style>
+        body { font-family: sans-serif; padding: 15px; background-color: #f0f8ff; color: #333; }
+        .header { text-align: center; margin-bottom: 25px; }
+        .period-title { font-size: 16px; color: #fff; background-color: #007BFF; padding: 5px 15px; border-radius: 20px; display: inline-block; margin-bottom: 15px; font-weight: bold;}
+        .desc { font-size: 14px; color: #d93025; background: #fff; padding: 15px; border-radius: 8px; border-left: 5px solid #d93025; text-align: left; margin-bottom: 15px; font-weight: bold; line-height: 1.5; box-shadow: 0 2px 4px rgba(0,0,0,0.05);}
+        
+        .info-box { background-color: #fff3f3; border: 2px solid #dc2626; color: #dc2626; padding: 12px; border-radius: 8px; font-size: 14px; text-align: center; margin-bottom: 20px; font-weight: bold; line-height: 1.5; }
+        
+        .day-card { background: #fff; border: 1px solid #d0e3f5; border-radius: 12px; padding: 18px; margin-bottom: 15px; box-shadow: 0 3px 6px rgba(0,123,255,0.08); }
+        .day-card h3 { margin: 0 0 15px 0; font-size: 18px; color: #0056b3; border-bottom: 2px solid #f0f8ff; padding-bottom: 8px; }
+        .input-row { display: flex; justify-content: space-between; align-items: center; }
+        .label-text { font-weight: bold; font-size: 16px; color: #444; }
+        input[type="number"] { padding: 12px; border: 2px solid #007BFF; border-radius: 10px; font-size: 18px; width: 110px; text-align: right; font-weight: bold; background-color: #fff; color: #333; }
+        .unit { font-size: 16px; color: #666; margin-left: 5px; font-weight: bold;}
+        
+        .memo-card { background: #fff; border: 1px solid #ccc; border-radius: 12px; padding: 18px; margin-top: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .memo-label { display: block; font-weight: bold; font-size: 16px; color: #444; margin-bottom: 10px; }
+        .memo-note { font-size: 12px; color: #666; margin-bottom: 10px; display: block; }
+        textarea { width: 100%; padding: 12px; border: 2px solid #ccc; border-radius: 8px; font-size: 16px; box-sizing: border-box; resize: vertical; min-height: 80px; }
+
+        .submit-btn { width: 100%; padding: 18px; background-color: #007BFF; color: white; border: none; border-radius: 15px; font-size: 20px; font-weight: bold; cursor: pointer; margin-top: 25px; }
+        .submit-btn:disabled { background-color: #ccc; }
+        
+        .completed-msg { text-align: center; color: #0056b3; font-size: 18px; font-weight: bold; padding: 30px 20px; background-color: #e6f2ff; border-radius: 15px; border: 2px solid #007BFF; margin-top: 20px; }
+        .correction-note { margin-top: 20px; font-size: 14px; color: #444; line-height: 1.6; text-align: left; background: #fff; padding: 15px; border-radius: 8px; border: 1px solid #ccc; }
+        
+        .close-btn { width: 100%; padding: 18px; background-color: #666; color: white; border: none; border-radius: 12px; font-size: 18px; margin-top: 25px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <span class="period-title">【中間】歩数の記録</span>
+        <div class="desc">連携アプリ [Mi Fitness] に表示されている数値を入力してください。</div>
+    </div>
+
+    <div class="info-box">
+        ⚠️ 時計のつけ忘れ等で<br>歩数を記録できなかった日は<br>「0」と入力してください。
+    </div>
+
+    <div id="form-wrapper">
+        <form id="stepForm">
+            <div id="inputs-container"></div>
+            
+            <div class="memo-card">
+                <label class="memo-label" for="memoInput">📝 備考（任意）</label>
+                <span class="memo-note">※歩数が極端に少ない理由（体調不良など）や、何かお気づきの点があればご記入ください。</span>
+                <textarea id="memoInput" placeholder="入力例：水曜日は体調不良のため時計を外していました。"></textarea>
+            </div>
+
+            <!-- ★ トラブル報告欄を追加 -->
+            <div class="memo-card">
+                <label class="memo-label" for="troubleInput">⚠️ トラブル報告（任意）</label>
+                <span class="memo-note">※機器の不具合や操作上のトラブルなどがあればご記入ください。</span>
+                <textarea id="troubleInput" placeholder="入力例：歩数がアプリにうまく同期されませんでした。"></textarea>
+            </div>
+
+            <button type="submit" id="submitBtn" class="submit-btn" disabled>読み込み中...</button>
+        </form>
+    </div>
+
+    <div id="completed-msg-box" style="display: none;">
+        <div class="completed-msg">
+            ✅ 送信が完了しました。<br>
+            <span style="font-size: 14px; font-weight: normal; display: block; margin-top: 10px;">（記録期間：11/16(月)〜11/22(日)）</span>
+            <br>ご協力ありがとうございました。
+        </div>
+        <div class="correction-note">
+            ⚠️ <strong>入力内容を修正したい場合</strong><br>
+            システム上、再入力はできません。修正がある場合は、お手数ですが「〇月〇日の歩数を〇〇歩に修正」と、直接このLINEのトーク画面にメッセージをお送りください。
+        </div>
+        <button class="close-btn" onclick="liff.closeWindow()">画面を閉じる</button>
+    </div>
+
+    <script>
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbwhg4QRc5zgqbjIj_3hQ-V8SJ2kogOQdSze7RfLZgp6KIi0jgr7WngrIiSJasXiMc37/exec";
+        const periodName = "中間"; 
+        const recordDates = ["11/16(月)", "11/17(火)", "11/18(水)", "11/19(木)", "11/20(金)", "11/21(土)", "11/22(日)"];
+        let userId = "";
+
+        const storageKey = `submitted_steps_${periodName}`;
+        
+        if (localStorage.getItem(storageKey) === 'true') {
+            document.getElementById('form-wrapper').innerHTML = `
+                <div class="completed-msg">
+                    ✅ 【${periodName}】の歩数記録は<br>すでに送信済みです。<br>
+                    <span style="font-size: 14px; font-weight: normal; display: block; margin-top: 10px;">（記録期間：11/16(月)〜11/22(日)）</span>
+                </div>
+                <div class="correction-note">
+                    ⚠️ <strong>入力内容を修正したい場合</strong><br>
+                    システム上、再入力はできません。修正がある場合は、お手数ですが「〇月〇日の歩数を〇〇歩に修正」と、直接このLINEのトーク画面にメッセージをお送りください。
+                </div>
+                <button class="close-btn" onclick="liff.closeWindow()">画面を閉じる</button>
+            `;
+        }
+
+        const container = document.getElementById('inputs-container');
+        recordDates.forEach((date, i) => { 
+            container.innerHTML += `
+                <div class="day-card">
+                    <h3>${date}</h3>
+                    <div class="input-row">
+                        <span class="label-text">🚶‍♂️ 歩数</span>
+                        <div>
+                            <input type="number" id="step-${i}" placeholder="0" min="0" max="100000" oninput="this.value = this.value.replace(/[^0-9]/g, ''); if(this.value > 100000) this.value = 100000;" required>
+                            <span class="unit">歩</span>
+                        </div>
+                    </div>
+                </div>
+            `; 
+        });
+
+        // ★ LIFF ID を中間用のものに変更
+        liff.init({ liffId: "2009895376-tyYJ0nxu" }).then(() => { 
+            if (!liff.isLoggedIn()) { 
+                liff.login(); 
+            } else { 
+                liff.getProfile().then(p => { 
+                    userId = p.userId; 
+                    document.getElementById('submitBtn').disabled = false; 
+                    document.getElementById('submitBtn').innerText = "送信する"; 
+                }); 
+            } 
+        });
+
+        document.getElementById('stepForm').addEventListener('submit', function(e) {
+            e.preventDefault(); 
+            const btn = document.getElementById('submitBtn'); 
+            btn.disabled = true;
+            btn.innerText = "送信中...";
+
+            let stepData = []; 
+            let msgText = `📅 【${periodName}の歩数記録】\n`;
+            
+            let memoVal = document.getElementById('memoInput').value.trim();
+            // ★ トラブル報告の内容を取得
+            let troubleVal = document.getElementById('troubleInput').value.trim();
+
+            recordDates.forEach((d, i) => { 
+                let v = document.getElementById(`step-${i}`).value;
+                if (v === "") v = "0"; 
+                
+                // ★ stepDataにtrouble情報も追加
+                stepData.push({ period: periodName, date: d, steps: v, memo: memoVal, trouble: troubleVal }); 
+                msgText += `${d}：🚶‍♂️ ${v}歩\n`; 
+            });
+
+            if(memoVal) {
+                msgText += `\n📝備考：\n${memoVal}`;
+            }
+            // ★ トラブル報告がある場合はLINEメッセージに追加
+            if(troubleVal) {
+                msgText += `\n\n⚠️トラブル報告：\n${troubleVal}`;
+            }
+
+            fetch(GAS_URL, { method: "POST", body: JSON.stringify({ userId: userId, type: 'step_record', value: stepData }) })
+            .then(r => r.json()).then(res => { 
+                if (res.error) {
+                    alert("送信エラー: " + res.error);
+                    btn.disabled = false;
+                    btn.innerText = "送信する";
+                } else {
+                    localStorage.setItem(storageKey, 'true'); 
+                    
+                    if (liff.isInClient()) { 
+                        liff.sendMessages([{ 'type': 'text', 'text': msgText.trim() }]).then(() => { 
+                            document.getElementById('form-wrapper').style.display = 'none'; 
+                            document.getElementById('completed-msg-box').style.display = 'block'; 
+                        }); 
+                    } else { 
+                        document.getElementById('form-wrapper').style.display = 'none'; 
+                        document.getElementById('completed-msg-box').style.display = 'block'; 
+                    } 
+                }
+            }).catch(err => {
+                alert("通信エラー: " + err.message);
+                btn.disabled = false;
+                btn.innerText = "送信する";
+            });
+        });
+    </script>
+</body>
+</html>
