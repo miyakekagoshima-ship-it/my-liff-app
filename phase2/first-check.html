@@ -9,7 +9,7 @@
         body { font-family: sans-serif; padding: 20px; background-color: #f9f9f9; color: #333; }
         h2 { text-align: center; font-size: 20px; color: #2c3e50; line-height: 1.4; margin-bottom: 5px; }
         
-        /* ★ 追加：締切延長・先着順の案内スタイル */
+        /* ★ 締切延長・先着順の案内スタイル */
         .extension-badge { background-color: #fff3f3; color: #d93025; font-size: 13px; font-weight: bold; text-align: center; padding: 10px; border: 2px solid #d93025; border-radius: 8px; margin-bottom: 20px; line-height: 1.5; }
         
         .form-group { margin-bottom: 20px; text-align: left; }
@@ -22,7 +22,8 @@
         input[type="radio"], input[type="checkbox"] { display: none; }
         input[type="radio"]:checked + .choice-label, input[type="checkbox"]:checked + .choice-label { background-color: #eaffea; border-color: #00B900; color: #00B900; }
         
-        input[type="checkbox"]:disabled + .choice-label { background-color: #e0e0e0; color: #999; cursor: not-allowed; border-color: #ccc; }
+        /* ★ 無効化（disabled）された選択肢のスタイル（グレーアウト） */
+        input[type="checkbox"]:disabled + .choice-label { background-color: #e0e0e0; color: #888; cursor: not-allowed; border-color: #ccc; font-weight: normal; }
 
         .submit-btn { width: 100%; padding: 15px; background-color: #00B900; color: white; border: none; border-radius: 10px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 20px; transition: 0.3s; }
         .submit-btn:disabled { background-color: #cccccc; cursor: not-allowed; color: #666666; }
@@ -37,7 +38,6 @@
 <body>
     <h2>よか茶レ！ 初回測定会</h2>
     
-    <!-- ★ 締切延長・最終締切・先着順の案内 -->
     <div class="extension-badge">
         📢 ただいま申込締切を延長して受付中です！<br>
         <span style="font-size: 14px; text-decoration: underline;">（最終締切：11/18（水））</span><br>
@@ -61,24 +61,26 @@
             </div>
 
             <div class="form-group">
-                <label>初回測定会（11/23）の希望時間（複数選択可）<span class="required">※必須</span></label>
+                <label>初回測定会（11/23）の希望時間<span class="required">※必須</span></label>
                 <div class="note">※測定の所要時間は1時間程度を予定しております。</div>
                 
+                <!-- ★ 午前枠締切の案内に変更 -->
                 <div class="crowd-warning">
-                    ⚠️ 午前の部は大変混雑が予想されます。<br>可能であれば、【午後の部】の選択を推奨しております。
+                    ⚠️ 午前の部は定員に達したため、受付を終了いたしました。<br>現在は【午後の部】のみのご案内となります。
                 </div>
 
                 <div class="choice-group">
-                    <input type="checkbox" id="timeAM" name="hopeTime" value="午前の部(9時～12時)">
+                    <!-- ★ 午前枠を disabled に設定 -->
+                    <input type="checkbox" id="timeAM" name="hopeTime" value="午前の部(9時～12時)" disabled>
                     <label for="timeAM" class="choice-label">
                         午前の部 (9時～12時)<br>
-                        <span style="font-size: 13px; font-weight: normal; color: #d93025;">※混雑予想</span>
+                        <span style="font-size: 13px; font-weight: bold; color: #d93025;">※定員に達したため受付終了</span>
                     </label>
                     
+                    <!-- ★ 午後枠はそのまま選択可能 -->
                     <input type="checkbox" id="timePM" name="hopeTime" value="午後の部(13時～15時)">
                     <label for="timePM" class="choice-label">
-                        午後の部 (13時～15時)<br>
-                        <span style="font-size: 13px; color: #16a34a;">★おすすめ</span>
+                        午後の部 (13時～15時)
                     </label>
                 </div>
             </div>
@@ -89,7 +91,6 @@
     <div id="completed-msg">
         ✅ 送信が完了しました。<br>ご協力ありがとうございます。<br><br>
         <div style="font-size: 14px; color: #444; line-height: 1.6; text-align: left; background-color: #fff; padding: 15px; border-radius: 8px; border: 1px solid #ccc;">
-            <!-- ★ 連絡日の修正（11月19日） -->
             お申し込みいただいた後、参加時間が確定し次第、<strong>11月19日（木）まで</strong>にこちらのLINEにて個別にご案内いたします。
         </div>
         <button class="close-btn" onclick="liff.closeWindow()">画面を閉じる</button>
