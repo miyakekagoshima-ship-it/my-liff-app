@@ -7,7 +7,6 @@
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <style>
         body { font-family: sans-serif; padding: 20px; background-color: #f9f9f9; color: #333; }
-        /* ★ 見出しのデザイン調整 */
         h2 { text-align: center; font-size: 18px; color: #2c3e50; line-height: 1.6; margin-bottom: 20px; }
         .form-group { margin-bottom: 20px; text-align: left; }
         label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 14px; }
@@ -63,11 +62,11 @@
     </div>
 
     <script>
-        // フェーズ1専用 GAS URL
+        // フェーズ2専用 GAS URL
         const GAS_URL = "https://script.google.com/macros/s/AKfycbx_dvHCMmzScTxeRPH3i09xaojiZa9W7Qrbiu7GvtZUWjJoo2rUZi70mTqsy0cxI4Rs/exec";
         let userId = "";
 
-        // フェーズ1専用 研究登録LIFF ID
+        // フェーズ2専用 研究登録LIFF ID
         liff.init({ liffId: "2010463622-RDsxXUGf" }) 
             .then(() => {
                 if (!liff.isLoggedIn()) {
