@@ -33,10 +33,9 @@
 
     <div id="video-section">
         <p style="font-weight: bold; color: #555;">実施する難易度を選んでください</p>
-        <!-- ★ 初級・中級・上級すべての動画IDを新しく差し替えました ★ -->
-        <button class="video-btn" onclick="showVideo('初級', 'PlpB1qatuHE')">初級（再生）</button>
-        <button class="video-btn" onclick="showVideo('中級', 'amrx9QtW8MA')">中級（再生）</button>
-        <button class="video-btn" onclick="showVideo('上級', 'hladBh6yp1o')">上級（再生）</button>
+        <button class="video-btn" onclick="showVideo('初級', 'MdXPpdbrpGE')">初級（再生）</button>
+        <button class="video-btn" onclick="showVideo('中級', '4TIqyQskAlw')">中級（再生）</button>
+        <button class="video-btn" onclick="showVideo('上級', 'g2NKweGZN_Q')">上級（再生）</button>
     </div>
 
     <div id="video-container">
@@ -46,7 +45,8 @@
     </div>
 
     <script>
-        const GAS_URL = "https://script.google.com/macros/s/AKfycbwhg4QRc5zgqbjIj_3hQ-V8SJ2kogOQdSze7RfLZgp6KIi0jgr7WngrIiSJasXiMc37/exec";
+        // フェーズ2専用 GAS URL
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbx_dvHCMmzScTxeRPH3i09xaojiZa9W7Qrbiu7GvtZUWjJoo2rUZi70mTqsy0cxI4Rs/exec";
         let userId = "";
         let currentLevel = ""; 
         let player;
@@ -59,7 +59,7 @@
         }
 
         function checkDailyLimit() {
-            if (localStorage.getItem('last_video_date') === getTodayString()) {
+            if (localStorage.getItem('last_video_date_phase2') === getTodayString()) {
                 document.querySelector('.warning-box').style.display = 'none';
                 
                 document.getElementById('video-section').innerHTML = '<div class="completed-msg">✅ 本日の体操は完了しています<br>お疲れ様でした！</div><button style="width:90%;margin-top:20px;padding:15px;background-color:#666;color:#fff;border-radius:10px;border:none;" onclick="liff.closeWindow()">閉じる</button>';
@@ -75,7 +75,8 @@
         let firstScriptTag = document.getElementsByTagName('script')[0];
         firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
-        liff.init({ liffId: '2009895376-YdjBVL2k' }) 
+        // フェーズ2専用 体操動画LIFF ID
+        liff.init({ liffId: '2010463622-AYjQ4N8P' }) 
             .then(() => {
                 checkDailyLimit();
                 if (!liff.isLoggedIn()) {
@@ -109,8 +110,8 @@
                     finishBtn.disabled = false;
                     finishBtn.innerText = "体操おわった！（記録する）";
                 } else {
-                    localStorage.setItem('last_video_date', getTodayString());
-                    checkDailyLimit(); // 表示の切り替え
+                    localStorage.setItem('last_video_date_phase2', getTodayString());
+                    checkDailyLimit();
                     
                     let msgText = '🏃‍♂️ 【体操の記録】\n本日（' + getTodayString() + '）：体操を実施しました！\n（コース：' + level + '）';
                     if (liff.isInClient()) {
