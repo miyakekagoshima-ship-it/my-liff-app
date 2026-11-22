@@ -40,9 +40,9 @@
     <div id="section-1" style="display: none;">
         <p class="section-title">【1回目】の実施</p>
         <p style="font-size: 14px; color: #666; margin-bottom: 15px;">実施する難易度を選んでください</p>
-        <button id="btn-1-1" class="video-btn" onclick="showVideo('初級', '6cFr8HxkL3s', 1, 'btn-1-1')">初級（再生）</button>
-        <button id="btn-1-2" class="video-btn" onclick="showVideo('中級', 'mRxvAD_m2AU', 1, 'btn-1-2')">中級（再生）</button>
-        <button id="btn-1-3" class="video-btn" onclick="showVideo('上級', '4VAUXghosII', 1, 'btn-1-3')">上級（再生）</button>
+        <button id="btn-1-1" class="video-btn" onclick="showVideo('初級', 'bank-OE1Oho', 1, 'btn-1-1')">初級（再生）</button>
+        <button id="btn-1-2" class="video-btn" onclick="showVideo('中級', 's41peZdDlNk', 1, 'btn-1-2')">中級（再生）</button>
+        <button id="btn-1-3" class="video-btn" onclick="showVideo('上級', 'v6glnd6haq4', 1, 'btn-1-3')">上級（再生）</button>
     </div>
 
     <div id="completed-1-msg" style="display: none; margin-bottom: 30px;">
@@ -50,12 +50,11 @@
     </div>
 
     <div id="section-2" style="display: none;">
-        <!-- ★ 「（任意）」を削除しました ★ -->
         <p class="section-title">【2回目】の実施</p>
         <p style="font-size: 14px; color: #666; margin-bottom: 15px;">※2回目を実施する場合は選んでください</p>
-        <button id="btn-2-1" class="video-btn" onclick="showVideo('初級', '6cFr8HxkL3s', 2, 'btn-2-1')">初級（再生）</button>
-        <button id="btn-2-2" class="video-btn" onclick="showVideo('中級', 'mRxvAD_m2AU', 2, 'btn-2-2')">中級（再生）</button>
-        <button id="btn-2-3" class="video-btn" onclick="showVideo('上級', '4VAUXghosII', 2, 'btn-2-3')">上級（再生）</button>
+        <button id="btn-2-1" class="video-btn" onclick="showVideo('初級', 'bank-OE1Oho', 2, 'btn-2-1')">初級（再生）</button>
+        <button id="btn-2-2" class="video-btn" onclick="showVideo('中級', 's41peZdDlNk', 2, 'btn-2-2')">中級（再生）</button>
+        <button id="btn-2-3" class="video-btn" onclick="showVideo('上級', 'v6glnd6haq4', 2, 'btn-2-3')">上級（再生）</button>
     </div>
 
     <div id="completed-2-msg" style="display: none;">
@@ -120,7 +119,8 @@
         let firstScriptTag = document.getElementsByTagName('script')[0];
         firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
-        liff.init({ liffId: '2009895376-17hQax0W' }) 
+        // ★ Phase 1リッチメニューに紐づいている体操動画のLIFF IDに変更
+        liff.init({ liffId: '2009895376-YdjBVL2k' }) 
             .then(() => {
                 checkDailyLimit();
                 if (!liff.isLoggedIn()) {
