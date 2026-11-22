@@ -78,9 +78,9 @@
         const recordDates = ["11/24(火)", "11/25(水)", "11/26(木)", "11/27(金)", "11/28(土)", "11/29(日)", "11/30(月)"];
         let userId = "";
 
-        // ★ 重複送信ブロック処理（Phase 2専用キー）
+        // ★ テスト用：重複送信ブロックを無効化中
         const storageKey = `submitted_steps_phase2_${periodName}`;
-        
+        /*
         if (localStorage.getItem(storageKey) === 'true') {
             document.getElementById('form-wrapper').innerHTML = `
                 <div class="completed-msg">
@@ -94,6 +94,7 @@
                 <button class="close-btn" onclick="liff.closeWindow()">画面を閉じる</button>
             `;
         }
+        */
 
         const container = document.getElementById('inputs-container');
         recordDates.forEach((date, i) => { 
@@ -154,7 +155,8 @@
                     btn.disabled = false;
                     btn.innerText = "送信する";
                 } else {
-                    localStorage.setItem(storageKey, 'true'); 
+                    // ★ テスト用：送信完了の保存を無効化中
+                    // localStorage.setItem(storageKey, 'true'); 
                     
                     if (liff.isInClient()) { 
                         liff.sendMessages([{ 'type': 'text', 'text': msgText.trim() }]).then(() => { 
