@@ -8,6 +8,13 @@
     <style>
         body { font-family: sans-serif; text-align: center; padding: 20px; background-color: #f9f9f9; color: #333;}
         h2 { font-size: 20px; color: #2c3e50; margin-bottom: 15px; }
+        
+        /* ★ 11/30までの待機案内ボックス */
+        .wait-box { background-color: #fff; padding: 30px 20px; border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.08); border-top: 5px solid #0056b3; margin: 20px 0; }
+        .wait-title { color: #0056b3; font-size: 19px; font-weight: bold; margin-bottom: 15px; }
+        .wait-text { font-size: 15px; line-height: 1.7; color: #444; }
+        .wait-date { color: #d93025; font-size: 18px; font-weight: bold; }
+
         .warning-box { background-color: #fff3f3; border: 2px solid #ffcccc; color: #d93025; padding: 15px; border-radius: 10px; font-size: 14px; text-align: left; margin-bottom: 20px; line-height: 1.5; font-weight: bold;}
         .warning-box span { font-size: 16px; margin-bottom: 5px; display: block; text-align: center;}
         
@@ -15,6 +22,7 @@
         .video-btn { background-color: #eaf4ff; color: #0056b3; border-color: #b3d7ff;}
         .finish-btn { background-color: #ffeaea; color: red; transition: 0.3s; margin-top: 15px;}
         .finish-btn:disabled { background-color: #e0e0e0; color: #888; cursor: not-allowed; border: 1px solid #ccc; font-weight: normal;}
+        .close-btn { width: 90%; margin-top: 15px; padding: 15px; background-color: #666; color: #fff; border-radius: 10px; border: none; font-size: 16px; }
         
         #video-container { margin-top: 20px; display: none; background-color: #fff; padding: 15px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);}
         #youtube-player { width: 100%; height: 250px; border: none; border-radius: 8px; }
@@ -25,66 +33,104 @@
 
     <h2>🏃‍♂️ 体操動画を見る</h2>
 
-    <div class="warning-box">
-        <span>⚠️ 動画視聴に関するご注意</span>
-        ・早送りや動画のスキップを行うと、視聴が完了したと判定されません。<br><br>
-        ・YouTubeアプリを開いて視聴した場合も判定外となります。動画右下の「全画面（拡大）ボタン」を押して、この画面のままご視聴ください。
+    <!-- ★ 11/30（月）までの待機画面 -->
+    <div id="wait-section" style="display: none;">
+        <div class="wait-box">
+            <div class="wait-title">公開準備中です</div>
+            <div class="wait-text">
+                体操動画の視聴は<br>
+                <span class="wait-date">11月30日（月）</span><br>
+                より開始となります。<br><br>
+                開始日まで今しばらくお待ちください。
+            </div>
+        </div>
+        <button class="close-btn" onclick="liff.closeWindow()">画面を閉じる</button>
     </div>
 
-    <div id="video-section">
-        <p style="font-weight: bold; color: #555;">実施する難易度を選んでください</p>
-        <button class="video-btn" onclick="showVideo('初級', 'MdXPpdbrpGE')">初級（再生）</button>
-        <button class="video-btn" onclick="showVideo('中級', '4TIqyQskAlw')">中級（再生）</button>
-        <button class="video-btn" onclick="showVideo('上級', 'g2NKweGZN_Q')">上級（再生）</button>
-    </div>
+    <!-- ★ 11/30（月）以降に表示される通常コンテンツ -->
+    <div id="main-content" style="display: none;">
+        <div class="warning-box">
+            <span>⚠️ 動画視聴に関するご注意</span>
+            ・早送りや動画のスキップを行うと、視聴が完了したと判定されません。<br><br>
+            ・YouTubeアプリを開いて視聴した場合も判定外となります。動画右下の「全画面（拡大）ボタン」を押して、この画面のままご視聴ください。
+        </div>
 
-    <div id="video-container">
-        <h3 id="video-title" style="color: #0056b3; margin-top: 0;"></h3>
-        <div id="youtube-player"></div>
-        <button id="finish-btn" class="finish-btn" onclick="finishVideo()" disabled>動画を最後まで見ると押せます</button>
+        <div id="video-section">
+            <p style="font-weight: bold; color: #555;">実施する難易度を選んでください</p>
+            <button class="video-btn" onclick="showVideo('初級', 'MdXPpdbrpGE')">初級（再生）</button>
+            <button class="video-btn" onclick="showVideo('中級', '4TIqyQskAlw')">中級（再生）</button>
+            <button class="video-btn" onclick="showVideo('上級', 'g2NKweGZN_Q')">上級（再生）</button>
+        </div>
+
+        <div id="video-container">
+            <h3 id="video-title" style="color: #0056b3; margin-top: 0;"></h3>
+            <div id="youtube-player"></div>
+            <button id="finish-btn" class="finish-btn" onclick="finishVideo()" disabled>動画を最後まで見ると押せます</button>
+        </div>
     </div>
 
     <script>
         // フェーズ2専用 GAS URL
         const GAS_URL = "https://script.google.com/macros/s/AKfycbx_dvHCMmzScTxeRPH3i09xaojiZa9W7Qrbiu7GvtZUWjJoo2rUZi70mTqsy0cxI4Rs/exec";
+        // ★ 公開開始日時（2026年11月30日 0:00 JST）
+        const OPEN_DATE = new Date("2026-11-30T00:00:00+09:00");
+
         let userId = "";
         let currentLevel = ""; 
         let player;
         let timeTracker; 
         let maxTime = 0; 
 
+        function isBeforeOpen() {
+            return new Date() < OPEN_DATE;
+        }
+
         function getTodayString() {
             const now = new Date();
             return now.getFullYear() + "-" + (now.getMonth() + 1) + "-" + now.getDate();
         }
 
-        function checkDailyLimit() {
+        function checkDisplayState() {
+            if (isBeforeOpen()) {
+                document.getElementById('wait-section').style.display = 'block';
+                document.getElementById('main-content').style.display = 'none';
+                return;
+            }
+
+            document.getElementById('wait-section').style.display = 'none';
+            document.getElementById('main-content').style.display = 'block';
+
             if (localStorage.getItem('last_video_date_phase2') === getTodayString()) {
                 document.querySelector('.warning-box').style.display = 'none';
                 
-                document.getElementById('video-section').innerHTML = '<div class="completed-msg">✅ 本日の体操は完了しています<br>お疲れ様でした！</div><button style="width:90%;margin-top:20px;padding:15px;background-color:#666;color:#fff;border-radius:10px;border:none;" onclick="liff.closeWindow()">閉じる</button>';
+                document.getElementById('video-section').innerHTML = '<div class="completed-msg">✅ 本日の体操は完了しています<br>お疲れ様でした！</div><button class="close-btn" onclick="liff.closeWindow()">閉じる</button>';
                 
                 document.getElementById('video-container').style.display = 'none';
             }
         }
 
-        document.addEventListener("DOMContentLoaded", checkDailyLimit);
+        document.addEventListener("DOMContentLoaded", checkDisplayState);
 
-        let tag = document.createElement('script');
-        tag.src = "https://www.youtube.com/iframe_api";
-        let firstScriptTag = document.getElementsByTagName('script')[0];
-        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+        // 公開日以降のみYouTube APIを読み込む
+        if (!isBeforeOpen()) {
+            let tag = document.createElement('script');
+            tag.src = "https://www.youtube.com/iframe_api";
+            let firstScriptTag = document.getElementsByTagName('script')[0];
+            firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+        }
 
         // フェーズ2専用 体操動画LIFF ID
         liff.init({ liffId: '2010463622-AYjQ4N8P' }) 
             .then(() => {
-                checkDailyLimit();
-                if (!liff.isLoggedIn()) {
-                    liff.login();
-                } else {
-                    liff.getProfile().then(profile => {
-                        userId = profile.userId;
-                    });
+                checkDisplayState();
+                if (!isBeforeOpen()) {
+                    if (!liff.isLoggedIn()) {
+                        liff.login();
+                    } else {
+                        liff.getProfile().then(profile => {
+                            userId = profile.userId;
+                        });
+                    }
                 }
             });
 
@@ -111,7 +157,7 @@
                     finishBtn.innerText = "体操おわった！（記録する）";
                 } else {
                     localStorage.setItem('last_video_date_phase2', getTodayString());
-                    checkDailyLimit();
+                    checkDisplayState();
                     
                     let msgText = '🏃‍♂️ 【体操の記録】\n本日（' + getTodayString() + '）：体操を実施しました！\n（コース：' + level + '）';
                     if (liff.isInClient()) {
